@@ -1,0 +1,33 @@
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+    "SIM",
+]
+
+ignore = [
+    "B008",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pyright]
+typeCheckingMode = "strict"
+venvPath = "."
+venv = ".venv"
+
+[tool.taskipy.tasks]
+# This will kill any process on port 8000/8001/etc before starting
+dev = "fuser -k 8000/tcp 8001/tcp 8002/tcp 8003/tcp 8004/tcp 8005/tcp || true && clear && python -m app.main"
+
+[tool.pylint.design]
+# Set this to 0 to stop Pylint from complaining about data-only classes
+min-public-methods = 0
