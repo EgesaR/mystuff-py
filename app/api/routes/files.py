@@ -1,3 +1,4 @@
+# app/api/routes/files.py
 """api/routes/files.py
 
 File and folder management endpoints.
@@ -8,6 +9,7 @@ import logging
 
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
     File,
     Form,
@@ -26,6 +28,7 @@ from app.schemas.file import FileResponse
 from app.schemas.folder import FolderCreate, FolderResponse, FolderUpdate
 from app.services.file_service import FileService
 from app.services.folder_service import FolderService
+from app.services.notification_service import NotificationService
 
 logger = logging.getLogger("app")
 router = APIRouter()
@@ -193,6 +196,7 @@ def list_files(
     summary="Upload a file (optionally into a folder)",
 )
 async def upload_file(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     folder_id: str | None = Form(None),
     name: str | None = Form(None),
@@ -201,13 +205,26 @@ async def upload_file(
 ) -> FileResponse:
     """Process stream upload binaries, routing destination targets safely."""
     try:
-        return await FileService.upload_file(
+        created = await FileService.upload_file(
             db,
             upload=file,
             owner=current_user,
             folder_id=folder_id,
             display_name=name,
         )
+
+        # Changed 'notification_type' back to 'type' to match your service signature
+        NotificationService.create(
+            db,
+            recipient_id=current_user.id,
+            title="Upload complete",
+            message=f"{created.name} finished uploading.",
+            background_tasks=background_tasks,
+            type="info",
+        )
+
+        return created
+
     except NotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found"
@@ -220,7 +237,6 @@ async def upload_file(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
         ) from exc
-
 
 @router.get(
     "/{file_id}",

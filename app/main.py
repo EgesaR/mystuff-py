@@ -1,9 +1,10 @@
-"""app/main.py
+# app/main.py
+"""
 Single application entrypoint.
 
 Registers:
-  - REST routes (auth, users, files, notes, media, logs, health)
-  - WebSocket handlers (dictate, lyrics, telemetry)
+  - REST routes (auth, users, files, notes, media, logs, notifications, health)
+  - WebSocket handlers (dictate, lyrics, telemetry, notifications)
   - Accent-profile REST endpoints (from old standalone main.py)
   - Static file serving for uploads
 """
@@ -26,11 +27,13 @@ from app.api.routes.health import router as health_router
 from app.api.routes.logs import router as logs_router
 from app.api.routes.media import router as media_router
 from app.api.routes.notes import router as notes_router
+from app.api.routes.notifications import router as notifications_router
 from app.api.routes.users import router as users_router
 
 # ── WebSocket routers ─────────────────────────────────────────────────────────
 from app.api.websocket.dictate import router as dictate_ws_router
 from app.api.websocket.lyrics import router as lyrics_ws_router
+from app.api.websocket.notifications import router as notifications_ws_router
 from app.api.websocket.telemetry import router as telemetry_ws_router
 from app.core.config import settings
 from app.core.errors import UserAlreadyExistsError
@@ -65,20 +68,31 @@ app.mount(
 )
 
 # ── REST routes ───────────────────────────────────────────────────────────────
-app.include_router(health_router,  prefix="/api/health",  tags=["Health"])
-app.include_router(auth_router,    prefix="/api/auth",    tags=["Auth"])
-app.include_router(users_router,   prefix="/api/users",   tags=["Users"])
-app.include_router(files_router,   prefix="/api/files",   tags=["Files"])
-app.include_router(notes_router,   prefix="/api/notes",   tags=["Notes"])
-app.include_router(media_router,   prefix="/api/media",   tags=["Media"])
-app.include_router(logs_router,    prefix="/api/logs",    tags=["Logs"])
+app.include_router(health_router,
+                   prefix="/api/health",        tags=["Health"])
+app.include_router(auth_router,          prefix="/api/auth",
+                   tags=["Auth"])
+app.include_router(
+    users_router,         prefix="/api/users",         tags=["Users"])
+app.include_router(
+    files_router,         prefix="/api/files",         tags=["Files"])
+app.include_router(
+    notes_router,         prefix="/api/notes",         tags=["Notes"])
+app.include_router(
+    media_router,         prefix="/api/media",         tags=["Media"])
+app.include_router(logs_router,          prefix="/api/logs",
+                   tags=["Logs"])
+app.include_router(notifications_router,
+                   prefix="/api/notifications", tags=["Notifications"])
 
 # ── WebSocket handlers ────────────────────────────────────────────────────────
-app.include_router(dictate_ws_router)    # /ws/dictate
-app.include_router(lyrics_ws_router)     # /ws/lyrics
-app.include_router(telemetry_ws_router)  # /ws/admin/telemetry
+app.include_router(dictate_ws_router)        # /ws/dictate
+app.include_router(lyrics_ws_router)         # /ws/lyrics
+app.include_router(telemetry_ws_router)      # /ws/admin/telemetry
+app.include_router(notifications_ws_router)  # /ws/notifications
 
 # ── Accent-profile REST endpoints ─────────────────────────────────────────────
+
 
 class CorrectionRequest(BaseModel):
     """Schema for incoming ASR token correction pairs."""
@@ -127,7 +141,6 @@ async def user_exists_exception_handler(
 # ── Dev entrypoint ────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    import socket
     import sys
 
     import uvicorn
@@ -144,11 +157,12 @@ if __name__ == "__main__":
                     candidate_port += 1
 
     # Get the port
-    PORT: int = _find_free_port()
+    PORT: int = int(os.environ.get("PORT", 8000))#_find_free_port()
 
     print(f"🚀  API     → http://localhost:{PORT}/docs")
     print(f"🎙️  Dictate → ws://localhost:{PORT}/ws/dictate")
     print(f"🎵  Lyrics  → ws://localhost:{PORT}/ws/lyrics")
+    print(f"🔔  Notify  → ws://localhost:{PORT}/ws/notifications")
     print(f"🧠  Accent  → http://localhost:{PORT}/api/accent/profile")
 
     try:

@@ -2,17 +2,34 @@
 
 import re
 
+_MELISMA_RE = re.compile(r"(.)\1{3,}")
+_BREATH_RE = re.compile(r"\*huh\*", re.IGNORECASE)
+_WHITESPACE_RE = re.compile(r"\s+")
+
+_STRUCTURE_TAGS = (
+    (("[chorus", "(chorus"), "\nCHORUS:"),
+    (("[verse", "(verse"), "\nVERSE:"),
+    (("[bridge", "(bridge"), "\nBRIDGE:"),
+)
+
 
 def clean_lyric_line(text: str) -> str:
     """Lightweight single-line cleanup for live interim display."""
     if not text:
         return ""
     # Collapse repeated characters (melisma / held notes)
-    text = re.sub(r"(.)\1{3,}", r"\1\1", text)
+    text = _MELISMA_RE.sub(r"\1\1", text)
     # Remove breath tokens
-    text = re.sub(r"\*huh\*", "", text, flags=re.IGNORECASE)
-    text = re.sub(r"\s+", " ", text).strip()
+    text = _BREATH_RE.sub("", text)
+    text = _WHITESPACE_RE.sub(" ", text).strip()
     return text
+
+
+def _structure_tag(lower_line: str) -> str | None:
+    for prefixes, tag in _STRUCTURE_TAGS:
+        if lower_line.startswith(prefixes):
+            return tag
+    return None
 
 
 def process_lyrics(text: str, structure: bool = True) -> str:
@@ -24,16 +41,8 @@ def process_lyrics(text: str, structure: bool = True) -> str:
     if not structure:
         return "\n".join(lines)
 
-    # Naïve structural annotation
     out: list[str] = []
     for line in lines:
-        lower = line.lower()
-        if lower.startswith("[chorus") or lower.startswith("(chorus"):
-            out.append(f"\nCHORUS:")
-        elif lower.startswith("[verse") or lower.startswith("(verse"):
-            out.append(f"\nVERSE:")
-        elif lower.startswith("[bridge") or lower.startswith("(bridge"):
-            out.append(f"\nBRIDGE:")
-        else:
-            out.append(line)
+        tag = _structure_tag(line.lower())
+        out.append(tag if tag is not None else line)
     return "\n".join(out).strip()

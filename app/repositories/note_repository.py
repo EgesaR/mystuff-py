@@ -1,4 +1,4 @@
-"""Note repository module handling database queries for Note models."""
+"""Note repository handling database queries for Note models."""
 
 from sqlalchemy.orm import Session
 
@@ -13,38 +13,37 @@ class NoteRepository(BaseRepository[Note]):
 
     @classmethod
     def get_user_notes(
-        cls,
-        db: Session,
-        user_id: str,
-        folder_id: str | None = None,
+        cls, db: Session, user_id: str, folder_id: str | None = None
     ) -> list[Note]:
-        """Retrieve all notes belonging to a user, optionally filtered by folder."""
+        """Retrieve notes for a user, optionally filtered by folder."""
         query = db.query(cls.model).filter(cls.model.owner_id == user_id)
-        if folder_id is not None:
-            # Type annotation on cls.model above helps Pylint see the new attribute
+
+        if folder_id:
             query = query.filter(cls.model.folder_id == folder_id)
-        return query.all()
+
+        # Assuming your Note model has a created_at column
+        return query.order_by(cls.model.created_at.desc()).all()
 
     @classmethod
     def get_pinned_notes(cls, db: Session, user_id: str) -> list[Note]:
-        """Retrieve all pinned notes belonging to a specific user."""
+        """Retrieve pinned notes for a user."""
         return (
             db.query(cls.model)
-            .filter(
-                cls.model.owner_id == user_id,
-                cls.model.pinned.is_(True),
-            )
+            .filter(cls.model.owner_id == user_id, cls.model.pinned.is_(True))
+            .order_by(cls.model.created_at.desc())
             .all()
         )
 
     @classmethod
     def search_notes(cls, db: Session, user_id: str, query: str) -> list[Note]:
-        """Perform a case-insensitive search on note titles."""
+        """Search notes by title for a specific user."""
+        search_term = f"%{query}%"
         return (
             db.query(cls.model)
             .filter(
                 cls.model.owner_id == user_id,
-                cls.model.title.ilike(f"%{query}%"),
+                cls.model.title.ilike(search_term)
             )
+            .order_by(cls.model.created_at.desc())
             .all()
         )

@@ -1,21 +1,21 @@
-"""Fix UTC default
+"""initial_migration
 
-Revision ID: 5f0698bd8a0c
+Revision ID: 6fcfec8263f6
 Revises: 
-Create Date: 2026-06-04 23:50:31.931835
+Create Date: 2026-07-15 19:00:08.047514
 
 """
-from collections.abc import Sequence
-from typing import Union
+from typing import Sequence, Union
 
-import sqlalchemy as sa
 from alembic import op
+import sqlalchemy as sa
+
 
 # revision identifiers, used by Alembic.
-revision: str = '5f0698bd8a0c'
-down_revision: str | Sequence[str] | None = None
-branch_labels: str | Sequence[str] | None = None
-depends_on: str | Sequence[str] | None = None
+revision: str = '6fcfec8263f6'
+down_revision: Union[str, Sequence[str], None] = None
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
@@ -87,6 +87,7 @@ def upgrade() -> None:
     sa.Column('read', sa.Boolean(), nullable=False),
     sa.Column('recipient_id', sa.String(), nullable=False),
     sa.Column('sender_id', sa.String(), nullable=True),
+    sa.Column('link', sa.String(length=255), nullable=True),
     sa.Column('id', sa.String(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
@@ -123,6 +124,7 @@ def upgrade() -> None:
     sa.Column('label', sa.String(length=100), nullable=False),
     sa.Column('message', sa.Text(), nullable=False),
     sa.Column('source', sa.String(length=255), nullable=True),
+    sa.Column('metadata_json', sa.JSON(), nullable=True),
     sa.Column('user_id', sa.String(), nullable=True),
     sa.Column('id', sa.String(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),

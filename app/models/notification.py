@@ -1,3 +1,4 @@
+# app/models/notification.py
 """Database models for system and user notifications."""
 
 from typing import TYPE_CHECKING
@@ -18,22 +19,10 @@ class Notification(Base, UUIDMixin, TimestampMixin):
 
     __tablename__ = "notifications"
 
-    title: Mapped[str] = mapped_column(
-        String(255),
-    )
-
-    message: Mapped[str] = mapped_column(
-        Text,
-    )
-
-    type: Mapped[NotificationType] = mapped_column(
-        Enum(NotificationType),
-    )
-
-    read: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-    )
+    title: Mapped[str] = mapped_column(String(255))
+    message: Mapped[str] = mapped_column(Text)
+    type: Mapped[NotificationType] = mapped_column(Enum(NotificationType))
+    read: Mapped[bool] = mapped_column(Boolean, default=False)
 
     recipient_id: Mapped[str] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -41,6 +30,11 @@ class Notification(Base, UUIDMixin, TimestampMixin):
 
     sender_id: Mapped[str | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    link: Mapped[str | None] = mapped_column(
+        String(255),
         nullable=True,
     )
 
@@ -52,4 +46,5 @@ class Notification(Base, UUIDMixin, TimestampMixin):
     sender: Mapped["User | None"] = relationship(
         foreign_keys=[sender_id],
         back_populates="notifications_sent",
-    )
+    )   
+    archived: Mapped[bool] = mapped_column(Boolean, default=False)

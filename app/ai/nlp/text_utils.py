@@ -6,31 +6,65 @@ Two modes
               grammar fixes, accent substitution.
   "lyrics"  — musical transcription: melisma cleanup, lyric-specific vocab,
               structural line detection, no aggressive spell correction.
+
+Accuracy
+--------
+`fine_tune_final_scored` / `fine_tune_text_scored` wrap the normal pipeline
+and additionally return an `AccuracyResult` (see `app.ai.nlp.accuracy`) so
+callers (websocket handlers, services) can log word accuracy without this
+module knowing anything about the database. The plain `fine_tune_*`
+functions are unchanged and remain the ones to use when you don't need
+metrics.
 """
 
 import re
-from typing import Literal
+from collections.abc import Callable
+from typing import Any, Literal, cast
 
 from app.ai.accent.learner import get_learner
 from app.ai.accent.mappings import CUSTOM_MAPPINGS, CUSTOM_VOCAB, REAL_SHORT_WORDS
 from app.ai.lyrics.processor import clean_lyric_line, process_lyrics
+from app.ai.nlp.accuracy import AccuracyResult, AccuracyType, word_accuracy
 
 Mode = Literal["speech", "lyrics"]
 
 # ── Optional: wordninja ─────────────────────────────────────────────────────
 try:
     import wordninja as _wn  # type: ignore[import-untyped]
-    WN_SPLIT = _wn.split
+    _wn_split: Any = cast(Any, _wn).split
 except ImportError:
-    WN_SPLIT = None
+    _wn_split = None
+
+WN_SPLIT: Callable[[str], list[str]] | None = _wn_split
+
 
 # ── Optional: pyspellchecker ──────────────────────────────────────────────────
 try:
     from spellchecker import SpellChecker
-    SPELL: SpellChecker | None = SpellChecker(distance=1)
-    SPELL.word_frequency.load_words(list(CUSTOM_VOCAB))
+    _spell: Any = SpellChecker(distance=1)
+    _spell.word_frequency.load_words(list(CUSTOM_VOCAB))
 except ImportError:
-    SPELL = None
+    _spell = None
+
+SPELL: Any = _spell
+
+
+# ── Precompiled patterns ─────────────────────────────────────────────────────
+# Compiling once at import time (instead of re.compile-under-the-hood on every
+# re.sub call, twice per utterance) is the single biggest hot-path win here.
+_CUSTOM_MAPPINGS_COMPILED: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(pattern, re.IGNORECASE), replacement)
+    for pattern, replacement in CUSTOM_MAPPINGS.items()
+]
+_WHITESPACE_RE = re.compile(r"\s+")
+_APOSTROPHE_RE = re.compile(r"(\w+)\s*'\s*(\w+)")
+_PUNCT_SPACE_RE = re.compile(r"\s+([.,!?;:])")
+
+
+def _apply_custom_mappings(text: str) -> str:
+    for pattern, replacement in _CUSTOM_MAPPINGS_COMPILED:
+        text = pattern.sub(replacement, text)
+    return text
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
@@ -59,12 +93,10 @@ def _is_acronym(word: str) -> bool:
 # ── Speech pipeline ───────────────────────────────────────────────────────────
 
 def _process_speech(text: str) -> str:
-    text = re.sub(r"\s+", " ", text).strip()
+    text = _WHITESPACE_RE.sub(" ", text).strip()
 
-    for pattern, replacement in CUSTOM_MAPPINGS.items():
-        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
-
-    text = re.sub(r"(\w+)\s*'\s*(\w+)", r"\1'\2", text)
+    text = _apply_custom_mappings(text)
+    text = _APOSTROPHE_RE.sub(r"\1'\2", text)
 
     tokens = text.split()
     tokens = _heal_bpe_fragments(tokens)
@@ -89,12 +121,23 @@ def _process_speech(text: str) -> str:
             recovered.append(word)
         text = " ".join(recovered)
 
-    for pattern, replacement in CUSTOM_MAPPINGS.items():
-        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+    # Re-applied because wordninja/learner substitutions can surface new
+    # contractions ("gonna"/"ta") that weren't present before splitting.
+    text = _apply_custom_mappings(text)
 
     if SPELL is not None:
         corrected: list[str] = []
-        for word in text.split():
+        # Batch the "already correct" check: SpellChecker.known() does a single
+        # set intersection instead of an unsupported `word in SPELL` membership
+        # test per word (SpellChecker has no __contains__, so the previous
+        # `core.lower() in SPELL` was silently falling through to iterating the
+        # object and comparing — effectively meaningless — before erroring or
+        # always failing depending on version). known() is both correct and
+        # faster since it's one call instead of N.
+        words = text.split()
+        candidates: list[str] = []
+        cores: list[tuple[str, str, bool]] = []  # (core, suffix, skip)
+        for word in words:
             core, suffix = _split_suffix(word)
             skip = (
                 len(core) <= 3
@@ -103,17 +146,22 @@ def _process_speech(text: str) -> str:
                 or (bool(core) and core[0].isupper())
                 or core.lower() in CUSTOM_VOCAB
             )
-            if skip:
+            cores.append((core, suffix, skip))
+            if not skip:
+                candidates.append(core.lower())
+
+        known_words: set[str] = SPELL.known(
+            candidates) if candidates else set()
+
+        for word, (core, suffix, skip) in zip(words, cores, strict=True):
+            if skip or core.lower() in known_words:
                 corrected.append(word)
                 continue
-            if core.lower() in SPELL:
-                corrected.append(word)
-            else:
-                fix = SPELL.correction(core.lower())
-                corrected.append((fix if fix else core.lower()) + suffix)
+            fix = SPELL.correction(core.lower())
+            corrected.append((fix if fix else core.lower()) + suffix)
         text = " ".join(corrected)
 
-    text = re.sub(r"\s+([.,!?;:])", r"\1", text)
+    text = _PUNCT_SPACE_RE.sub(r"\1", text)
 
     if text:
         text = text[0].upper() + text[1:]
@@ -126,9 +174,8 @@ def _process_speech(text: str) -> str:
 def _process_lyrics_interim(text: str) -> str:
     if not text:
         return ""
-    text = re.sub(r"\s+", " ", text).strip()
-    for pattern, replacement in CUSTOM_MAPPINGS.items():
-        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+    text = _WHITESPACE_RE.sub(" ", text).strip()
+    text = _apply_custom_mappings(text)
     text = get_learner().apply(text)
     text = clean_lyric_line(text)
     if text:
@@ -139,9 +186,8 @@ def _process_lyrics_interim(text: str) -> str:
 def _process_lyrics_final(text: str, structured: bool = True) -> str:
     if not text:
         return ""
-    text = re.sub(r"\s+", " ", text).strip()
-    for pattern, replacement in CUSTOM_MAPPINGS.items():
-        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+    text = _WHITESPACE_RE.sub(" ", text).strip()
+    text = _apply_custom_mappings(text)
     text = get_learner().apply(text)
     return process_lyrics(text, structure=structured)
 
@@ -160,3 +206,42 @@ def fine_tune_final(text: str, mode: Mode = "speech", structured: bool = True) -
     if mode == "lyrics":
         return _process_lyrics_final(text, structured=structured)
     return _process_speech(text)
+
+
+def fine_tune_final_scored(
+    text: str,
+    mode: Mode = "speech",
+    structured: bool = True,
+) -> tuple[str, AccuracyResult]:
+    """Same as `fine_tune_final`, plus a raw-vs-processed accuracy score.
+
+    This is reference-free: it measures how much the pipeline had to change
+    relative to the raw ASR text, which is a useful proxy signal even before
+    any human correction exists. Callers that have a DB session should log
+    the returned `AccuracyResult` via `LogService.log_accuracy(...)` with
+    `AccuracyType.RAW_VS_PROCESSED`.
+    """
+    processed = fine_tune_final(text, mode=mode, structured=structured)
+    metrics = word_accuracy(reference=text, hypothesis=processed)
+    return processed, metrics
+
+
+def fine_tune_text_scored(
+    text: str,
+    mode: Mode = "speech",
+) -> tuple[str, AccuracyResult]:
+    """Interim-transcript counterpart of `fine_tune_final_scored`."""
+    processed = fine_tune_text(text, mode=mode)
+    metrics = word_accuracy(reference=text, hypothesis=processed)
+    return processed, metrics
+
+
+__all__ = [
+    "Mode",
+    "fine_tune_text",
+    "fine_tune_final",
+    "fine_tune_final_scored",
+    "fine_tune_text_scored",
+    "AccuracyResult",
+    "AccuracyType",
+]
