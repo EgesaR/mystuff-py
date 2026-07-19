@@ -22,6 +22,7 @@ from starlette.requests import Request
 
 # ── REST routers ──────────────────────────────────────────────────────────────
 from app.api.routes.auth import router as auth_router
+from app.api.routes.collections import router as collection_router
 from app.api.routes.files import router as files_router
 from app.api.routes.health import router as health_router
 from app.api.routes.logs import router as logs_router
@@ -63,7 +64,7 @@ os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 
 app.mount(
     "/uploads",
-    StaticFiles(directory=settings.UPLOAD_DIR),
+    StaticFiles(directory=str(settings.UPLOAD_DIR)),
     name="uploads",
 )
 
@@ -72,6 +73,8 @@ app.include_router(health_router,
                    prefix="/api/health",        tags=["Health"])
 app.include_router(auth_router,          prefix="/api/auth",
                    tags=["Auth"])
+app.include_router(collection_router,          prefix="/api/files/collections",
+                   tags=["Collections"])
 app.include_router(
     users_router,         prefix="/api/users",         tags=["Users"])
 app.include_router(

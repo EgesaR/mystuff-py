@@ -4,10 +4,9 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
-
-from typing import Literal
 
 from app.models.enums import NotificationType
 
@@ -47,6 +46,7 @@ class NotificationResponse(BaseModel):
 class BulkNotificationAction(BaseModel):
     ids: list[str]
     action: Literal["read", "archive", "unarchive", "delete"]
+
 
 class UnreadCountResponse(BaseModel):
     """Schema for returning the count of unread notifications."""

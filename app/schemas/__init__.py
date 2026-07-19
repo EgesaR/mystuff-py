@@ -17,6 +17,7 @@ from app.schemas.media import (
 from app.schemas.note import NoteCreate, NoteResponse, NoteUpdate
 from app.schemas.token import RefreshRequest, TokenPair
 from app.schemas.user import UserResponse, UserUpdate
+from app.schemas.collection import CollectionCreate, CollectionUpdate, CollectionResponse, CollectionFileAdd
 
 __all__ = [
     "SignupRequest",
@@ -41,4 +42,8 @@ __all__ = [
     "NoteMediaResponse",
     "AudioNoteResponse",
     "MediaItemResponse",
+    "CollectionCreate",
+    "CollectionUpdate",
+    "CollectionResponse",
+    "CollectionFileAdd"
 ]

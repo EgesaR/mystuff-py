@@ -11,9 +11,9 @@ from sqlalchemy.orm import Session
 
 from app.api.deps.auth import require_active_user
 from app.api.deps.database import get_db
-from app.models.system_log import SystemLog
 from app.models.user import User
 from app.repositories.log_repository import LogRepository
+from app.schemas.system_log import SystemLogResponse
 from app.services.log_service import LogService
 
 logger = logging.getLogger("app")
@@ -129,7 +129,7 @@ async def admin_telemetry(websocket: WebSocket) -> None:
 @router.get(
     "/search",
     summary="Search system logs (admin / debugging)",
-    response_model=list[Any],
+    response_model=list[SystemLogResponse],
 )
 def search_logs(
     user_id: str | None = Query(None, description="Filter by user ID"),
@@ -139,7 +139,7 @@ def search_logs(
     limit: int = Query(100, le=500),
     _current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
-) -> list[SystemLog]:
+) -> list[Any]:
     """Expose query parameters for deep log analysis and auditing."""
     return LogService.search(
         db,
@@ -187,7 +187,7 @@ def accuracy_stats(
 @router.get(
     "/accuracy/history",
     summary="Raw word-accuracy log entries, newest first",
-    response_model=list[Any],
+    response_model=list[SystemLogResponse],
 )
 def accuracy_history(
     mode: str | None = Query(None, pattern="^(speech|lyrics)$"),
@@ -198,7 +198,7 @@ def accuracy_history(
     limit: int = Query(100, le=500),
     _current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
-) -> list[SystemLog]:
+) -> list[Any]:
     """Per-utterance/per-correction accuracy log rows, for charting a trend."""
     return LogRepository.get_accuracy_logs(
         db,

@@ -4,6 +4,10 @@ from typing import Literal
 
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_UPLOAD_DIR = PROJECT_ROOT / "data" / "uploads"
 
 
 class Settings(BaseSettings):
@@ -17,13 +21,13 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = "sqlite:///./mystuff.db"
 
-    SECRET_KEY: str = "change-me"
+    SECRET_KEY: str = "OoprAVGnRFk9ui77CEIo8H-XQJV3BOFW8WmZNLpkGwc"
     ALGORITHM: Literal["HS256"] = "HS256"
 
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 720 #15
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 720  # 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    UPLOAD_DIR: str = "uploads"
+    UPLOAD_DIR: Path = DEFAULT_UPLOAD_DIR
     MAX_UPLOAD_SIZE_MB: int = 500
 
     SMTP_HOST: str = "smtp.gmail.com"

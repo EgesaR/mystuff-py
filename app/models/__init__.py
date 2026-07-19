@@ -8,6 +8,7 @@ from app.models.note import Note
 from app.models.notification import Notification
 from app.models.system_log import SystemLog
 from app.models.user import User
+from app.models.collection import Collection, CollectionFile
 
 __all__ = [
     "User",
@@ -21,4 +22,6 @@ __all__ = [
     "PasswordResetToken",
     "Notification",
     "SystemLog",
+    "Collection",
+    "CollectionFile"
 ]

@@ -1,4 +1,3 @@
-# app/api/routes/files.py
 """api/routes/files.py
 
 File and folder management endpoints.
@@ -23,6 +22,7 @@ from sqlalchemy.orm import Session
 from app.api.deps.auth import require_active_user
 from app.api.deps.database import get_db
 from app.core.errors import NotFoundError, PermissionDeniedError
+from app.models.enums import NotificationType
 from app.models.user import User
 from app.schemas.file import FileResponse
 from app.schemas.folder import FolderCreate, FolderResponse, FolderUpdate
@@ -213,108 +213,31 @@ async def upload_file(
             display_name=name,
         )
 
-        # Changed 'notification_type' back to 'type' to match your service signature
         NotificationService.create(
-            db,
+            db=db,
             recipient_id=current_user.id,
             title="Upload complete",
             message=f"{created.name} finished uploading.",
+            notification_type=NotificationType.INFO,
             background_tasks=background_tasks,
-            type="info",
         )
 
         return created
 
     except NotFoundError as exc:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Folder not found",
         ) from exc
+
     except PermissionDeniedError as exc:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
         ) from exc
+
     except ValueError as exc:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
-        ) from exc
-
-@router.get(
-    "/{file_id}",
-    response_model=FileResponse,
-    summary="Get a single file's metadata",
-)
-def get_file(
-    file_id: str,
-    current_user: User = Depends(require_active_user),
-    db: Session = Depends(get_db),
-) -> FileResponse:
-    """Fetch descriptive structural metadata records for a single file."""
-    try:
-        return FileService.get_file(
-            db, file_id=file_id, user_id=current_user.id
-        )
-    except NotFoundError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
-        ) from exc
-    except PermissionDeniedError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-        ) from exc
-
-
-@router.patch(
-    "/{file_id}/move",
-    response_model=FileResponse,
-    summary="Move a file to a different folder (or root)",
-)
-def move_file(
-    file_id: str,
-    folder_id: str | None = Query(
-        None, description="Target folder ID. Omit to move to root."
-    ),
-    current_user: User = Depends(require_active_user),
-    db: Session = Depends(get_db),
-) -> FileResponse:
-    """Re-parent file records across structural directory hierarchies."""
-    try:
-        return FileService.move_file(
-            db,
-            file_id=file_id,
-            user_id=current_user.id,
-            folder_id=folder_id,
-        )
-    except NotFoundError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File or folder not found",
-        ) from exc
-    except PermissionDeniedError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-        ) from exc
-
-
-@router.delete(
-    "/{file_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete a file",
-)
-def delete_file(
-    file_id: str,
-    current_user: User = Depends(require_active_user),
-    db: Session = Depends(get_db),
-) -> None:
-    """Purge target file resource allocations from tracking indexes."""
-    try:
-        FileService.delete_file(
-            db, file_id=file_id, user_id=current_user.id
-        )
-    except NotFoundError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
-        ) from exc
-    except PermissionDeniedError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
         ) from exc
