@@ -9,8 +9,10 @@ from app.core.config import settings
 
 connect_args: dict[str, bool] = {}
 
-if settings.DATABASE_URL.startswith("sqlite"):
+if settings.is_sqlite:
     connect_args["check_same_thread"] = False
+else:
+    connect_args = {}
 
 engine = create_engine(
     settings.DATABASE_URL,

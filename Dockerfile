@@ -1,34 +1,62 @@
-# 1. Use a slim Python 3.12 image
-FROM python:3.12-slim
+# 1. Python runtime
+FROM python:3.13-slim
 
-# 2. Set environment variables
+# 2. Environment
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PORT=8000
+    PORT=8000 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
 
-# 3. Install system dependencies
-# ffmpeg is essential for your TranscriptionService/media processing
+# 3. System dependencies
+# ffmpeg: audio/video processing
+# libgomp1: torch/numpy runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libgomp1 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 4. Set work directory
+
+# 4. Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+
+# 5. Application directory
 WORKDIR /app
 
-# 5. Copy requirements first to leverage Docker cache
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# 6. Copy the entire application
+# 6. Copy dependency definitions
+COPY pyproject.toml uv.lock ./
+
+
+# 7. Install locked dependencies
+RUN uv sync --frozen --no-dev
+
+
+# 8. Copy application
 COPY . .
 
-# 7. Create the uploads directory and ensure permissions
-RUN mkdir -p /app/uploads && chmod 755 /app/uploads
 
-# 8. Expose the port
+# 9. Runtime directories
+RUN mkdir -p /app/data/uploads \
+    && chmod -R 755 /app/data
+
+
+# 10. Create non-root user
+RUN useradd \
+    --create-home \
+    --shell /bin/bash \
+    appuser \
+    && chown -R appuser:appuser /app
+
+
+USER appuser
+
+
+# 11. Port
 EXPOSE 8000
 
-# 9. Run the application
-# Use 'uvicorn' directly. Note: Do NOT use 'reload=True' in production.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# 12. Production startup
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

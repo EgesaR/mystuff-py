@@ -1,20 +1,84 @@
+[project]
+name = "mystuff"
+version = "1.0.0"
+description = "My Stuff API - file, note, media management and AI services"
+requires-python = ">=3.13,<3.14"
+
+dependencies = [
+    # API
+    "fastapi==0.136.1",
+    "uvicorn[standard]==0.48.0",
+    # Database
+    "sqlalchemy==2.0.49",
+    "alembic==1.18.4",
+    "psycopg2-binary==2.9.12",
+    # Validation / Configuration
+    "pydantic==2.13.4",
+    "pydantic-settings==2.14.1",
+    # Authentication / Security
+    "python-jose==3.5.0",
+    "bcrypt==5.0.0",
+    "email-validator==2.3.0",
+    # Uploads / Forms
+    "python-multipart==0.0.29",
+    "aiofiles",
+    # Email
+    "aiosmtplib==5.1.0",
+    # Storage
+    "boto3==1.43.51",
+    # Documents / Media
+    "python-docx==1.2.0",
+    "fpdf2==2.8.7",
+    "pillow==12.3.0",
+    # Networking
+    "httpx==0.28.1",
+    "websockets==16.0",
+    # Environment
+    "python-dotenv==1.2.2",
+    "huggingface-hub>=1.16.4",
+]
+
+[dependency-groups]
+dev = [
+    "ruff==0.15.14",
+    "pyright==1.1.409",
+    "black==26.5.1",
+    "autopep8==2.3.2",
+    "taskipy==1.14.1",
+    "boto3-stubs[s3]>=1.43.52",
+]
+
+ai = [
+    "numpy==2.4.6",
+    "torch==2.12.0",
+    "torchaudio",
+    "torchvision",
+    "transformers==5.9.0",
+    "huggingface-hub==1.16.4",
+    "safetensors==0.7.0",
+    "onnxruntime==1.24.4",
+    "sherpa-onnx==1.13.2",
+]
+
+# --- UV PyTorch CPU Index Routing ---
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+torchaudio = [{ index = "pytorch-cpu" }]
+torchvision = [{ index = "pytorch-cpu" }]
+
+# --- Tool Settings ---
 [tool.ruff]
 line-length = 88
-target-version = "py312"
+target-version = "py313"
 
 [tool.ruff.lint]
-select = [
-    "E",
-    "F",
-    "I",
-    "UP",
-    "B",
-    "SIM",
-]
-
-ignore = [
-    "B008",
-]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["B008"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -25,9 +89,12 @@ venvPath = "."
 venv = ".venv"
 
 [tool.taskipy.tasks]
-# This will kill any process on port 8000/8001/etc before starting
-dev = "fuser -k 8000/tcp 8001/tcp 8002/tcp 8003/tcp 8004/tcp 8005/tcp || true && clear && python -m app.main"
+dev = """
+export LD_LIBRARY_PATH=$PWD/.venv/lib/python3.13/site-packages/onnxruntime/capi:$LD_LIBRARY_PATH && \
+fuser -k 8000/tcp 8001/tcp 8002/tcp 8003/tcp 8004/tcp 8005/tcp || true && \
+clear && \
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+"""
 
 [tool.pylint.design]
-# Set this to 0 to stop Pylint from complaining about data-only classes
 min-public-methods = 0

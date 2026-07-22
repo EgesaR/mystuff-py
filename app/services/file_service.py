@@ -5,23 +5,9 @@ from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.errors import NotFoundError
-# confirm this enum has a generic member — I assumed FILE
-from app.models.enums import MediaType
 from app.models.user import User
 from app.repositories.file_repository import FileRepository
 from app.services.storage_service import StorageService
-
-
-def _infer_media_type(mime: str) -> MediaType:
-    if mime.startswith("image/"):
-        return MediaType.IMAGE
-    if mime.startswith("video/"):
-        return MediaType.VIDEO
-    if mime.startswith("audio/"):
-        return MediaType.AUDIO
-    if "gif" in mime:
-        return MediaType.GIF
-    return MediaType.FILE  # <- rename to match your actual enum member
 
 
 class FileService:
@@ -39,9 +25,9 @@ class FileService:
         folder_id: str | None = None,
         display_name: str | None = None,
     ) -> Any:
-        """Persist the uploaded bytes to disk, then record metadata."""
+
         stored = await StorageService.upload_file(
-            file=upload, owner_id=owner.id, sub_folder="files"
+            file=upload, owner_id=owner.id
         )
 
         return FileRepository.create(
@@ -55,7 +41,7 @@ class FileService:
                 "url": stored["url"],
                 "size_bytes": stored["size_bytes"],
                 "mime_type": stored["mime_type"],
-                "media_type": _infer_media_type(stored["mime_type"]),
+                "media_type": stored["media_type"],
             },
         )
 
@@ -77,8 +63,10 @@ class FileService:
         )
 
     @staticmethod
-    def delete_file(db: Session, file_id: str, user_id: str) -> None:
+    async def delete_file(db: Session, file_id: str, user_id: str) -> None:
+        """Now async because cloud deletion requires a network request."""
         file = FileService.get_file(db, file_id=file_id, user_id=user_id)
-        # also remove the bytes on disk
-        StorageService.delete_file(file.file_path)
+
+        # Pass the url (or file_path) based on how you implemented storage.delete()
+        await StorageService.delete_file(file.url)
         FileRepository.delete(db, db_obj=file)
