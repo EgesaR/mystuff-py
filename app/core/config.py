@@ -116,7 +116,7 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:5173",
         "https://localhost:5173",
-        "https://mystuff.vercel.app",
+        "https://mystuffs.vercel.app",
     ]
 
     # ==========================================================================
