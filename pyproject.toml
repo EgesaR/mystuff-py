@@ -54,7 +54,6 @@ ai = [
     "torchaudio",
     "torchvision",
     "transformers==5.9.0",
-    "huggingface-hub==1.16.4",
     "safetensors==0.7.0",
     "onnxruntime==1.24.4",
     "sherpa-onnx==1.13.2",

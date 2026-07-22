@@ -31,7 +31,7 @@ COPY pyproject.toml uv.lock ./
 
 
 # 7. Install locked dependencies
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --group ai
 
 
 # 8. Copy application

@@ -649,7 +649,6 @@ dependencies = [
 
 [package.dev-dependencies]
 ai = [
-    { name = "huggingface-hub" },
     { name = "numpy" },
     { name = "onnxruntime" },
     { name = "safetensors" },
@@ -698,7 +697,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 ai = [
-    { name = "huggingface-hub", specifier = "==1.16.4" },
     { name = "numpy", specifier = "==2.4.6" },
     { name = "onnxruntime", specifier = "==1.24.4" },
     { name = "safetensors", specifier = "==0.7.0" },
