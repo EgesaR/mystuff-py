@@ -24,7 +24,19 @@ class NotificationRepository(BaseRepository[Notification]):
         limit: int = 50,
         skip: int = 0,
     ) -> list[Notification]:
-        """Fetch a user's notifications, optionally filtered to unread/archived."""
+        """Retrieve user notifications.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+            unread_only (bool): Unread only flag.
+            archived (bool): Archived flag.
+            limit (int): Limit integer.
+            skip (int): Skip integer.
+        
+        Returns:
+            list[Notification]: List of Notification.
+        """
         query = db.query(cls.model).filter(
             cls.model.recipient_id == user_id,
             cls.model.archived == archived,
@@ -40,7 +52,15 @@ class NotificationRepository(BaseRepository[Notification]):
 
     @classmethod
     def count_unread(cls, db: Session, user_id: str) -> int:
-        """Count a user's unread notifications."""
+        """Count unread.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            int: int result.
+        """
         return (
             db.query(cls.model)
             .filter(cls.model.recipient_id == user_id, cls.model.read.is_(False))
@@ -49,7 +69,15 @@ class NotificationRepository(BaseRepository[Notification]):
 
     @classmethod
     def mark_all_read(cls, db: Session, user_id: str) -> int:
-        """Mark every unread notification for a user as read."""
+        """Mark all notifications as read.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            int: int result.
+        """
         updated = (
             db.query(cls.model)
             .filter(cls.model.recipient_id == user_id, cls.model.read.is_(False))
@@ -62,10 +90,16 @@ class NotificationRepository(BaseRepository[Notification]):
     def bulk_update(
         cls, db: Session, ids: list[str], user_id: str, data: dict[str, Any]
     ) -> int:
-        """Apply `data` to every notification in `ids` owned by `user_id`.
-
-        Scoped to `recipient_id == user_id` so a caller can't smuggle in
-        someone else's notification id and mutate it via this endpoint.
+        """Bulk update.
+        
+        Args:
+            db (Session): Database session.
+            ids (list[str]): The ids.
+            user_id (str): Unique identifier of the user.
+            data (dict[str, Any]): The data.
+        
+        Returns:
+            int: int result.
         """
         # SQLAlchemy's Query.update() stub wants Dict[_DMLColumnArgument, Any];
         # plain dict[str, Any] is rejected by Pylance due to dict's invariant
@@ -81,7 +115,16 @@ class NotificationRepository(BaseRepository[Notification]):
 
     @classmethod
     def bulk_delete(cls, db: Session, ids: list[str], user_id: str) -> int:
-        """Delete every notification in `ids` owned by `user_id`."""
+        """Bulk delete.
+        
+        Args:
+            db (Session): Database session.
+            ids (list[str]): The ids.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            int: int result.
+        """
         deleted = (
             db.query(cls.model)
             .filter(cls.model.id.in_(ids), cls.model.recipient_id == user_id)

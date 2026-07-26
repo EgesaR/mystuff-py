@@ -19,7 +19,14 @@ router = APIRouter()
     tags=["Health"],
 )
 def health(db: Session = Depends(get_db)) -> dict[str, str]:
-    """Verify operational status of application core and database connectivity."""
+    """Return the API health status.
+    
+    Args:
+        db (Session): Database session.
+    
+    Returns:
+        dict[str, str]: Response payload.
+    """
     try:
         db.execute(text("SELECT 1"))
         db_ok = True

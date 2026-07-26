@@ -14,7 +14,14 @@ from app.schemas.token import (
 
 
 def hash_password(password: str) -> str:
-    """Hash a plaintext password using bcrypt."""
+    """Hash a password for secure storage.
+    
+    Args:
+        password (str): Password string.
+    
+    Returns:
+        str: Processed string result.
+    """
     # Bcrypt truncates passwords longer than 72 bytes.
     # We slice to ensure stability across platforms.
     pwd_bytes = password[:72].encode("utf-8")
@@ -23,7 +30,15 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a plaintext password against a hash."""
+    """Verify a password against its stored hash.
+    
+    Args:
+        plain_password (str): Plain password string.
+        hashed_password (str): Hashed password string.
+    
+    Returns:
+        bool: True if successful, False otherwise.
+    """
     pwd_bytes = plain_password[:72].encode("utf-8")
     hashed_bytes = hashed_password.encode("utf-8")
     return bcrypt.checkpw(pwd_bytes, hashed_bytes)
@@ -33,7 +48,15 @@ def create_access_token(
     subject: str,
     expires_delta: timedelta | None = None,
 ) -> str:
-    """Generate a new access token."""
+    """Create a new access token.
+    
+    Args:
+        subject (str): Subject string.
+        expires_delta (timedelta | None): The expires delta.
+    
+    Returns:
+        str: Processed string result.
+    """
     if expires_delta is None:
         expires_delta = timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -59,7 +82,15 @@ def create_refresh_token(
     subject: str,
     expires_delta: timedelta | None = None,
 ) -> str:
-    """Generate a new refresh token."""
+    """Create a new refresh token.
+    
+    Args:
+        subject (str): Subject string.
+        expires_delta (timedelta | None): The expires delta.
+    
+    Returns:
+        str: Processed string result.
+    """
     if expires_delta is None:
         expires_delta = timedelta(
             days=settings.REFRESH_TOKEN_EXPIRE_DAYS,
@@ -84,7 +115,14 @@ def create_refresh_token(
 def decode_token(
     token: str,
 ) -> dict[str, Any] | None:
-    """Decode a JWT token and return the payload."""
+    """Decode a JWT token payload.
+    
+    Args:
+        token (str): Token string.
+    
+    Returns:
+        dict[str, Any] | None: Response payload or None.
+    """
     try:
         return jwt.decode(
             token,
@@ -99,7 +137,14 @@ def decode_token(
 def decode_access_token(
     token: str,
 ) -> AccessTokenPayload | None:
-    """Decode and validate an access token."""
+    """Decode an access token payload.
+    
+    Args:
+        token (str): Token string.
+    
+    Returns:
+        AccessTokenPayload | None: AccessTokenPayload or None.
+    """
     payload = decode_token(token)
 
     if payload is None:
@@ -120,7 +165,14 @@ def decode_access_token(
 def decode_refresh_token(
     token: str,
 ) -> RefreshTokenPayload | None:
-    """Decode and validate a refresh token."""
+    """Decode a refresh token payload.
+    
+    Args:
+        token (str): Token string.
+    
+    Returns:
+        RefreshTokenPayload | None: RefreshTokenPayload or None.
+    """
     payload = decode_token(token)
 
     if payload is None:

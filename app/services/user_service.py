@@ -15,7 +15,15 @@ class UserService:
 
     @staticmethod
     def get_by_id(db: Session, user_id: str) -> User:
-        """Retrieve a user by their unique identifier."""
+        """Retrieve by ID.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            User: User data.
+        """
         user = UserRepository.get(db, user_id)
         if not user:
             raise NotFoundError("User not found")
@@ -23,35 +31,85 @@ class UserService:
 
     @staticmethod
     def delete_account(db: Session, user: User) -> None:
-        """Permanently remove a user account."""
+        """Delete account.
+        
+        Args:
+            db (Session): Database session.
+            user (User): User model instance or payload.
+        
+        Returns:
+            None: None result.
+        """
         # Ensure we pass the ID to the repository
         UserRepository.delete(db, user)
 
     @staticmethod
     def update_profile(db: Session, user: User, data: dict[str, Any]) -> User:
-        """Update user profile fields based on a dictionary of changes."""
+        """Update profile.
+        
+        Args:
+            db (Session): Database session.
+            user (User): User model instance or payload.
+            data (dict[str, Any]): The data.
+        
+        Returns:
+            User: User data.
+        """
         return UserRepository.update(db, user, data)
 
     @staticmethod
     def update_avatar(db: Session, user: User, avatar_url: str) -> User:
-        """Update the user's avatar URL."""
+        """Update avatar.
+        
+        Args:
+            db (Session): Database session.
+            user (User): User model instance or payload.
+            avatar_url (str): Avatar url string.
+        
+        Returns:
+            User: User data.
+        """
         return UserRepository.update(db, user, {"avatar_url": avatar_url.strip()})
 
     @staticmethod
     def deactivate_account(db: Session, user: User) -> User:
-        """Deactivate a user account."""
+        """Deactivate account.
+        
+        Args:
+            db (Session): Database session.
+            user (User): User model instance or payload.
+        
+        Returns:
+            User: User data.
+        """
         if not user.is_active:
             return user
         return UserRepository.update(db, user, {"is_active": False})
 
     @staticmethod
     def reactivate_account(db: Session, user: User) -> User:
-        """Reactivate a user account."""
+        """Reactivate account.
+        
+        Args:
+            db (Session): Database session.
+            user (User): User model instance or payload.
+        
+        Returns:
+            User: User data.
+        """
         if user.is_active:
             return user
         return UserRepository.update(db, user, {"is_active": True})
 
     @staticmethod
     def update_last_login(db: Session, user: User) -> User:
-        """Update the user's last login timestamp."""
+        """Update last login.
+        
+        Args:
+            db (Session): Database session.
+            user (User): User model instance or payload.
+        
+        Returns:
+            User: User data.
+        """
         return UserRepository.update(db, user, {"last_login": datetime.now(UTC)})

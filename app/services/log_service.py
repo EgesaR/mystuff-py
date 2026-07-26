@@ -28,13 +28,19 @@ class LogService:
         source: str | None = None,
         metadata: dict[str, Any] | None = None,
     ) -> SystemLog:
-        """Commit a structured system log entry to the tracking repository.
-
-        NOTE: `label` previously wasn't being set here even though the
-        column is non-nullable — any call to this without a DB-level
-        default on `label` would have raised an IntegrityError. Giving it
-        a "general" default fixes that without changing the call signature
-        for existing callers.
+        """Log.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str | None): Unique identifier of the user.
+            message (str): Message string.
+            level (LogLevel): The level.
+            label (str): Label string.
+            source (str | None): The source.
+            metadata (dict[str, Any] | None): The metadata.
+        
+        Returns:
+            SystemLog: SystemLog result.
         """
         log_entry = SystemLog(
             user_id=user_id,
@@ -67,12 +73,18 @@ class LogService:
         result: AccuracyResult,
         source: str | None = None,
     ) -> SystemLog:
-        """Log a word-accuracy measurement for a speech/lyrics transcript.
-
-        `accuracy_type` is `AccuracyType.RAW_VS_PROCESSED` (reference-free,
-        computed automatically for every finalised transcript) or
-        `AccuracyType.PROCESSED_VS_CORRECTED` (computed only when the user
-        submits a manual correction — the real ground-truth signal).
+        """Log accuracy.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str | None): Unique identifier of the user.
+            mode (str): Mode string.
+            accuracy_type (AccuracyType | str): The accuracy type.
+            result (AccuracyResult): The result.
+            source (str | None): The source.
+        
+        Returns:
+            SystemLog: SystemLog result.
         """
         accuracy_type_value = (
             accuracy_type.value
@@ -106,11 +118,17 @@ class LogService:
         user_id: str | None = None,
         limit: int = 500,
     ) -> dict[str, Any]:
-        """Aggregate word-accuracy logs: overall average plus a recent trend.
-
-        `limit` bounds how many recent accuracy log rows are pulled before
-        aggregating in Python — cheap and portable across SQLite/Postgres,
-        and plenty for a trend view (raise it if you need deeper history).
+        """Retrieve accuracy stats.
+        
+        Args:
+            db (Session): Database session.
+            mode (str | None): The mode.
+            accuracy_type (AccuracyType | str | None): The accuracy type.
+            user_id (str | None): Unique identifier of the user.
+            limit (int): Limit integer.
+        
+        Returns:
+            dict[str, Any]: Response payload.
         """
         accuracy_type_value = (
             accuracy_type.value
@@ -184,7 +202,17 @@ class LogService:
         regex_pattern: str | None = None,
         limit: int = 100,
     ) -> list[SystemLog]:
-        """Filter and search stored logs using standard matching operations."""
+        """Search.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str | None): Unique identifier of the user.
+            regex_pattern (str | None): The regex pattern.
+            limit (int): Limit integer.
+        
+        Returns:
+            list[SystemLog]: List of SystemLog.
+        """
         query = db.query(SystemLog)
         if user_id:
             query = query.filter(SystemLog.user_id == user_id)

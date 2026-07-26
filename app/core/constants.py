@@ -106,18 +106,25 @@ DEFAULT_COLLECTION_COLOR = "#6366f1"
 
 
 def is_allowed_mime(mime_type: str) -> bool:
-    """Return whether `mime_type` is on any of the allow-lists above.
-
-    Not wired into the upload path yet — StorageService.upload_file()
-    currently accepts anything. Call this from FileService.upload_file()
-    (or StorageService) if you want to start rejecting unknown types.
+    """Check whether a MIME type is permitted.
+    
+    Args:
+        mime_type (str): Mime type string.
+    
+    Returns:
+        bool: True if successful, False otherwise.
     """
     return mime_type in ALL_ALLOWED_TYPES
 
 
 def max_size_mb_for(mime_type: str) -> int:
-    """Return the size cap that applies to `mime_type`, falling back to
-    MAX_GENERIC_FILE_SIZE_MB for anything not in a specific category.
+    """Determine the size limit for a MIME type.
+    
+    Args:
+        mime_type (str): Mime type string.
+    
+    Returns:
+        int: int result.
     """
     if mime_type in ALLOWED_IMAGE_TYPES:
         return MAX_IMAGE_SIZE_MB

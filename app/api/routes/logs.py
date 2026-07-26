@@ -29,6 +29,11 @@ class ConnectionManager:
     """Manages active WebSocket connections for live log telemetry."""
 
     def __init__(self) -> None:
+        """Init.
+        
+        Returns:
+            None: None result.
+        """
         self.admin_connections: list[WebSocket] = []
         self.user_connections: defaultdict[str,
                                            list[WebSocket]] = defaultdict(list)
@@ -36,22 +41,52 @@ class ConnectionManager:
     # ── Lifecycle ─────────────────────────────────────────────────────────────
 
     async def connect_admin(self, websocket: WebSocket) -> None:
-        """Register and accept an incoming administrator stream channel."""
+        """Connect admin.
+        
+        Args:
+            websocket (WebSocket): The websocket.
+        
+        Returns:
+            None: None result.
+        """
         await websocket.accept()
         self.admin_connections.append(websocket)
 
     async def connect_user(self, websocket: WebSocket, user_id: str) -> None:
-        """Register and accept an incoming standard client stream channel."""
+        """Connect user.
+        
+        Args:
+            websocket (WebSocket): The websocket.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            None: None result.
+        """
         await websocket.accept()
         self.user_connections[user_id].append(websocket)
 
     def disconnect_admin(self, websocket: WebSocket) -> None:
-        """Deregister an active administrator stream socket."""
+        """Disconnect admin.
+        
+        Args:
+            websocket (WebSocket): The websocket.
+        
+        Returns:
+            None: None result.
+        """
         if websocket in self.admin_connections:
             self.admin_connections.remove(websocket)
 
     def disconnect_user(self, websocket: WebSocket, user_id: str) -> None:
-        """Deregister an active client subscription pipeline identifier."""
+        """Disconnect user.
+        
+        Args:
+            websocket (WebSocket): The websocket.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            None: None result.
+        """
         connections = self.user_connections.get(user_id)
         if not connections:
             return
@@ -63,7 +98,14 @@ class ConnectionManager:
     # ── Broadcasting ──────────────────────────────────────────────────────────
 
     async def broadcast_log(self, log_data: dict[str, Any]) -> None:
-        """Broadcast a log event to all connected admin sockets."""
+        """Broadcast log.
+        
+        Args:
+            log_data (dict[str, Any]): The log data.
+        
+        Returns:
+            None: None result.
+        """
         dead: list[WebSocket] = []
         payload = {"type": "live_log", "data": log_data}
 
@@ -77,7 +119,15 @@ class ConnectionManager:
             self.disconnect_admin(ws)
 
     async def send_to_user(self, user_id: str, payload: dict[str, Any]) -> None:
-        """Send a payload to all sockets of a specific user."""
+        """Send to user.
+        
+        Args:
+            user_id (str): Unique identifier of the user.
+            payload (dict[str, Any]): Request payload.
+        
+        Returns:
+            None: None result.
+        """
         connections = self.user_connections.get(user_id, [])
         dead: list[WebSocket] = []
 
@@ -94,12 +144,20 @@ class ConnectionManager:
 
     @property
     def total_admin_connections(self) -> int:
-        """Return the current population count of administrative streaming targets."""
+        """Total admin connections.
+        
+        Returns:
+            int: int result.
+        """
         return len(self.admin_connections)
 
     @property
     def total_user_connections(self) -> int:
-        """Return the aggregated matrix length of all standard client sockets."""
+        """Total user connections.
+        
+        Returns:
+            int: int result.
+        """
         return sum(len(v) for v in self.user_connections.values())
 
 
@@ -113,7 +171,14 @@ manager = ConnectionManager()
 
 @router.websocket("/ws/admin/telemetry")
 async def admin_telemetry(websocket: WebSocket) -> None:
-    """Admin live-log stream tracking telemetry context pipelines."""
+    """Admin telemetry.
+    
+    Args:
+        websocket (WebSocket): The websocket.
+    
+    Returns:
+        None: None result.
+    """
     await manager.connect_admin(websocket)
     try:
         while True:
@@ -140,7 +205,18 @@ def search_logs(
     _current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[Any]:
-    """Expose query parameters for deep log analysis and auditing."""
+    """Search logs.
+    
+    Args:
+        user_id (str | None): Unique identifier of the user.
+        regex_pattern (str | None): The regex pattern.
+        limit (int): Limit integer.
+        _current_user (User): The  current user.
+        db (Session): Database session.
+    
+    Returns:
+        list[Any]: List of Any.
+    """
     return LogService.search(
         db,
         user_id=user_id,
@@ -174,7 +250,19 @@ def accuracy_stats(
     _current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
-    """Overall + recent-trend word accuracy, broken down by mode."""
+    """Accuracy stats.
+    
+    Args:
+        mode (str | None): The mode.
+        accuracy_type (str | None): The accuracy type.
+        user_id (str | None): Unique identifier of the user.
+        limit (int): Limit integer.
+        _current_user (User): The  current user.
+        db (Session): Database session.
+    
+    Returns:
+        dict[str, Any]: Response payload.
+    """
     return LogService.get_accuracy_stats(
         db,
         mode=mode,
@@ -199,7 +287,19 @@ def accuracy_history(
     _current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[Any]:
-    """Per-utterance/per-correction accuracy log rows, for charting a trend."""
+    """Accuracy history.
+    
+    Args:
+        mode (str | None): The mode.
+        accuracy_type (str | None): The accuracy type.
+        user_id (str | None): Unique identifier of the user.
+        limit (int): Limit integer.
+        _current_user (User): The  current user.
+        db (Session): Database session.
+    
+    Returns:
+        list[Any]: List of Any.
+    """
     return LogRepository.get_accuracy_logs(
         db,
         mode=mode,

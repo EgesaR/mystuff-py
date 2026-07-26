@@ -22,7 +22,18 @@ class FolderService:
         color: str | None = None,
         parent_id: str | None = None,
     ) -> Any:
-        """Validate naming constraints and instantiate a target folder."""
+        """Create folder.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+            name (str): Name string.
+            color (str | None): The color.
+            parent_id (str | None): Unique identifier of the target resource.
+        
+        Returns:
+            Any: Result value.
+        """
         existing = FolderRepository.get_folder_by_name(
             db, name, user_id, parent_id
         )
@@ -44,7 +55,16 @@ class FolderService:
     def list_folders(
         db: Session, user_id: str, parent_id: str | None = None
     ) -> list[Any]:
-        """Retrieve scoped folders matching identities and hierarchies."""
+        """List folders.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+            parent_id (str | None): Unique identifier of the target resource.
+        
+        Returns:
+            list[Any]: List of Any.
+        """
         return FolderRepository.get_folders(
             db, user_id=user_id, parent_id=parent_id
         )
@@ -53,7 +73,17 @@ class FolderService:
     def update_folder(
         db: Session, folder_id: str, user_id: str, data: dict[str, Any]
     ) -> Any:
-        """Modify styling or metadata attributes of an existing folder."""
+        """Update folder.
+        
+        Args:
+            db (Session): Database session.
+            folder_id (str): Unique identifier of the folder.
+            user_id (str): Unique identifier of the user.
+            data (dict[str, Any]): The data.
+        
+        Returns:
+            Any: Result value.
+        """
         folder = FolderRepository.get_user_folder(
             db, folder_id=folder_id, user_id=user_id
         )
@@ -65,7 +95,16 @@ class FolderService:
 
     @staticmethod
     def delete_folder(db: Session, folder_id: str, user_id: str) -> None:
-        """Remove a folder resource cascading entity drops downward."""
+        """Delete folder.
+        
+        Args:
+            db (Session): Database session.
+            folder_id (str): Unique identifier of the folder.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            None: None result.
+        """
         folder = FolderRepository.get_user_folder(
             db, folder_id=folder_id, user_id=user_id
         )
@@ -75,12 +114,29 @@ class FolderService:
 
     @staticmethod
     def get_user_folders(db: Session, user_id: str) -> list[Any]:
-        """Fetch flat catalogs belonging directly to an account profile."""
+        """Retrieve user folders.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            list[Any]: List of Any.
+        """
         return FolderRepository.get_user_folders(db, user_id)
 
     @staticmethod
     def get_folder_tree(db: Session, folder_id: str, user_id: str) -> Any:
-        """Construct and structuralize recursive nested folder trees."""
+        """Retrieve folder tree.
+        
+        Args:
+            db (Session): Database session.
+            folder_id (str): Unique identifier of the folder.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            Any: Result value.
+        """
         folder = FolderRepository.get_user_folder(
             db, folder_id=folder_id, user_id=user_id
         )

@@ -29,7 +29,18 @@ def list_notes(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[Note]:
-    """Retrieve list of notes belonging to authenticated user with optional filters."""
+    """List notes for the current user.
+    
+    Args:
+        folder_id (str | None): Unique identifier of the folder.
+        q (str | None): The q.
+        pinned_only (bool): Pinned only flag.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        list[Note]: List of Note.
+    """
     if q:
         return NoteService.search_notes(db, user_id=current_user.id, query=q)
     if pinned_only:
@@ -50,7 +61,16 @@ def create_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
-    """Create and persist a new note record under the current authenticated user."""
+    """Create a new note.
+    
+    Args:
+        payload (NoteCreate): Request payload.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        Note: Note result.
+    """
     try:
         # With the NoteCreate schema updated, payload.folder_id is now valid
         return NoteService.create_note(
@@ -76,7 +96,16 @@ def get_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
-    """Fetch details of a single note validated against user authorization scopes."""
+    """Retrieve a specific note.
+    
+    Args:
+        note_id (str): Unique identifier of the note.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        Note: Note result.
+    """
     try:
         return NoteService.get_note(db, note_id=note_id, user_id=current_user.id)
     except NotFoundError as exc:
@@ -100,7 +129,17 @@ def update_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
-    """Partially modify properties of a specific authorized note instance."""
+    """Update an existing note.
+    
+    Args:
+        note_id (str): Unique identifier of the note.
+        payload (NoteUpdate): Request payload.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        Note: Note result.
+    """
     try:
         return NoteService.update_note(
             db,
@@ -128,7 +167,16 @@ def pin_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
-    """Set the pin metadata status of an active note to true."""
+    """Pin a note.
+    
+    Args:
+        note_id (str): Unique identifier of the note.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        Note: Note result.
+    """
     try:
         return NoteService.set_pinned(
             db, note_id=note_id, user_id=current_user.id, pinned=True
@@ -153,7 +201,16 @@ def unpin_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
-    """Set the pin metadata status of an active note to false."""
+    """Unpin a note.
+    
+    Args:
+        note_id (str): Unique identifier of the note.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        Note: Note result.
+    """
     try:
         return NoteService.set_pinned(
             db, note_id=note_id, user_id=current_user.id, pinned=False
@@ -181,7 +238,17 @@ def move_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
-    """Relocate a target note into an alternate user directory or root structure."""
+    """Move a note to a different folder.
+    
+    Args:
+        note_id (str): Unique identifier of the note.
+        folder_id (str | None): Unique identifier of the folder.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        Note: Note result.
+    """
     try:
         return NoteService.move_note(
             db, note_id=note_id, user_id=current_user.id, folder_id=folder_id
@@ -207,7 +274,16 @@ def delete_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
-    """Permanently clear down and remove an authorized note entity from storage."""
+    """Delete a note.
+    
+    Args:
+        note_id (str): Unique identifier of the note.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        None: None result.
+    """
     try:
         NoteService.delete_note(db, note_id=note_id, user_id=current_user.id)
     except NotFoundError as exc:

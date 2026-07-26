@@ -1,6 +1,5 @@
 """Accent substitution tables and custom vocabularies."""
 
-from typing import Dict, List, Set, Tuple
 
 # Pre-built phonetic substitution tables for common accent families.
 ACCENT_TABLES: dict[str, list[tuple[str, str]]] = {

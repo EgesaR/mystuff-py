@@ -43,7 +43,16 @@ def signup(
     response: Response,  # Add this!
     db: Session = Depends(get_db),
 ):
-    """Register a new user and set authorization cookies."""
+    """Register a new user account.
+    
+    Args:
+        payload (SignupRequest): Request payload.
+        response (Response): HTTP response object.
+        db (Session): Database session.
+    
+    Returns:
+        Any: Result value.
+    """
     try:
         user = AuthService.signup(
             db,
@@ -80,7 +89,6 @@ def signup(
         ) from exc
 
 
-
 # ── Login ─────────────────────────────────────────────────────────────────────
 
 
@@ -90,10 +98,24 @@ def login(
     response: Response,  # Add response injection
     db: Session = Depends(get_db),
 ):
-    """Authenticate a user and set authorization cookies."""
-    user = AuthService.authenticate(
-        db, email=payload.email, password=payload.password
-    )
+    """Authenticate a user and issue authorization cookies.
+    
+    Args:
+        payload (LoginRequest): Request payload.
+        response (Response): HTTP response object.
+        db (Session): Database session.
+    
+    Returns:
+        Any: Result value.
+    """
+    try:
+        user = AuthService.authenticate(
+            db, email=payload.email, password=payload.password
+        )
+    except AuthenticationError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Invalid email or password") from exc
+        
     tokens = AuthService.create_token_pair(db, user)
 
     # Set cookies
@@ -115,6 +137,7 @@ def login(
     )
     return user
 
+
 # ── Refresh ───────────────────────────────────────────────────────────────────
 
 @router.post(
@@ -126,7 +149,15 @@ def refresh(
     payload: RefreshRequest,
     db: Session = Depends(get_db),
 ) -> TokenPair:
-    """Rotate an unexpired refresh token to yield clean authorization credentials."""
+    """Refresh access and refresh tokens.
+    
+    Args:
+        payload (RefreshRequest): Request payload.
+        db (Session): Database session.
+    
+    Returns:
+        TokenPair: TokenPair result.
+    """
     try:
         return AuthService.refresh_tokens(db, payload.refresh_token)
     except AuthenticationError as exc:
@@ -148,7 +179,16 @@ def logout(
     payload: RefreshRequest,
     db: Session = Depends(get_db),
 ) -> None:
-    """Invalidate a specific active refresh token session and clear cookies."""
+    """Revoke the current refresh token and clear cookies.
+    
+    Args:
+        response (Response): HTTP response object.
+        payload (RefreshRequest): Request payload.
+        db (Session): Database session.
+    
+    Returns:
+        None: None result.
+    """
     AuthService.logout(db, payload.refresh_token)
 
     response.delete_cookie("access_token")
@@ -167,7 +207,15 @@ def logout_all(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
-    """Invalidate all active token sessions across all user hardware endpoints."""
+    """Revoke all refresh tokens for the current user.
+    
+    Args:
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        None: None result.
+    """
     AuthService.logout_all_devices(db, current_user.id)
 
 
@@ -182,7 +230,15 @@ def forgot_password(
     payload: ForgotPasswordRequest,
     db: Session = Depends(get_db),
 ) -> ForgotPasswordResponse:
-    """Initialize a recovery tracking state and send a transient recovery code out."""
+    """Send a password reset code to the user email.
+    
+    Args:
+        payload (ForgotPasswordRequest): Request payload.
+        db (Session): Database session.
+    
+    Returns:
+        ForgotPasswordResponse: ForgotPasswordResponse payload.
+    """
     result = AuthService.request_password_reset(db, email=payload.email)
 
     response = ForgotPasswordResponse(
@@ -204,7 +260,15 @@ def reset_password(
     payload: ResetPasswordRequest,
     db: Session = Depends(get_db),
 ) -> None:
-    """Verify context token metrics and commit a new password string replacement."""
+    """Reset a user password using a recovery code.
+    
+    Args:
+        payload (ResetPasswordRequest): Request payload.
+        db (Session): Database session.
+    
+    Returns:
+        None: None result.
+    """
     try:
         AuthService.reset_password(
             db,
@@ -231,7 +295,16 @@ def change_password(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
-    """Update active user passwords by asserting the correctness of old passwords."""
+    """Change the current user password.
+    
+    Args:
+        payload (ChangePasswordRequest): Request payload.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        None: None result.
+    """
     try:
         AuthService.change_password(
             db,
@@ -256,5 +329,12 @@ def change_password(
 def me(
     current_user: User = Depends(require_active_user),
 ) -> User:
-    """Fetch profile parameters tied to the requesting active authorization token."""
+    """Return the authenticated user profile.
+    
+    Args:
+        current_user (User): Authenticated user performing the action.
+    
+    Returns:
+        User: User data.
+    """
     return current_user

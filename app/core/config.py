@@ -41,7 +41,11 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def is_sqlite(self) -> bool:
-        """Whether the application is using SQLite."""
+        """Return whether sqlite.
+        
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         return self.DATABASE_URL.startswith("sqlite")
 
     # ==========================================================================
@@ -66,7 +70,11 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def max_upload_size_bytes(self) -> int:
-        """Maximum upload size in bytes."""
+        """Return the maximum upload size bytes.
+        
+        Returns:
+            int: int result.
+        """
         return self.MAX_UPLOAD_SIZE_MB * 1024 * 1024
 
     # ==========================================================================
@@ -132,3 +140,7 @@ class Settings(BaseSettings):
 
 
 settings = Settings()  # pyright: ignore[reportCallIssue]
+
+if settings.is_sqlite:
+    _db_path = Path(settings.DATABASE_URL.removeprefix("sqlite:///"))
+    _db_path.parent.mkdir(parents=True, exist_ok=True)

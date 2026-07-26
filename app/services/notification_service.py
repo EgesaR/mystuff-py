@@ -24,7 +24,19 @@ class NotificationService:
         limit: int = 50,
         skip: int = 0,
     ) -> list[Any]:
-        """List a user's notifications, filtered by read/archived state."""
+        """List notifications for a user.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+            unread_only (bool): Unread only flag.
+            archived (bool): Archived flag.
+            limit (int): Limit integer.
+            skip (int): Skip integer.
+        
+        Returns:
+            list[Any]: List of Any.
+        """
         return NotificationRepository.get_user_notifications(
             db,
             user_id=user_id,
@@ -36,7 +48,15 @@ class NotificationService:
 
     @staticmethod
     def unread_count(db: Session, user_id: str) -> int:
-        """Count a user's unread notifications."""
+        """Count unread notifications for a user.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            int: int result.
+        """
         return NotificationRepository.count_unread(db, user_id=user_id)
 
     @staticmethod
@@ -50,12 +70,20 @@ class NotificationService:
         link: str | None = None,
         sender_id: str | None = None,
     ) -> Any:
-        """Create a notification and push it to the recipient over WS.
-
-        `notification_type` is required rather than defaulted — confirm the
-        real member name against `app.models.enums.NotificationType` at each
-        call site (e.g. the file-upload notification) rather than assuming
-        one here.
+        """Create.
+        
+        Args:
+            db (Session): Database session.
+            recipient_id (str): Unique identifier of the target resource.
+            title (str): Title string.
+            message (str): Message string.
+            notification_type (NotificationType): The notification type.
+            background_tasks (BackgroundTasks): The background tasks.
+            link (str | None): The link.
+            sender_id (str | None): Unique identifier of the target resource.
+        
+        Returns:
+            Any: Result value.
         """
         notification = NotificationRepository.create(
             db,
@@ -88,7 +116,16 @@ class NotificationService:
 
     @staticmethod
     def mark_read(db: Session, notification_id: str, user_id: str) -> Any:
-        """Mark a single notification as read, if owned by `user_id`."""
+        """Mark a notification as read.
+        
+        Args:
+            db (Session): Database session.
+            notification_id (str): Unique identifier of the notification.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            Any: Result value.
+        """
         notification = NotificationRepository.get(db, notification_id)
         if not notification:
             raise NotFoundError("Notification not found")
@@ -100,14 +137,32 @@ class NotificationService:
 
     @staticmethod
     def mark_all_read(db: Session, user_id: str) -> int:
-        """Mark every unread notification for `user_id` as read."""
+        """Mark all notifications as read.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            int: int result.
+        """
         return NotificationRepository.mark_all_read(db, user_id=user_id)
 
     @staticmethod
     def set_archived(
         db: Session, notification_id: str, user_id: str, archived: bool
     ) -> Any:
-        """Archive or unarchive a single notification owned by `user_id`."""
+        """Set archived.
+        
+        Args:
+            db (Session): Database session.
+            notification_id (str): Unique identifier of the notification.
+            user_id (str): Unique identifier of the user.
+            archived (bool): Archived flag.
+        
+        Returns:
+            Any: Result value.
+        """
         notification = NotificationRepository.get(db, notification_id)
         if not notification:
             raise NotFoundError("Notification not found")
@@ -119,7 +174,17 @@ class NotificationService:
 
     @staticmethod
     def bulk_action(db: Session, ids: list[str], user_id: str, action: str) -> int:
-        """Apply a bulk read/archive/unarchive/delete action to `ids`."""
+        """Bulk action.
+        
+        Args:
+            db (Session): Database session.
+            ids (list[str]): The ids.
+            user_id (str): Unique identifier of the user.
+            action (str): Action string.
+        
+        Returns:
+            int: int result.
+        """
         if action == "delete":
             return NotificationRepository.bulk_delete(db, ids=ids, user_id=user_id)
         data_map = {
@@ -133,7 +198,16 @@ class NotificationService:
 
     @staticmethod
     def delete(db: Session, notification_id: str, user_id: str) -> None:
-        """Permanently delete a single notification owned by `user_id`."""
+        """Delete.
+        
+        Args:
+            db (Session): Database session.
+            notification_id (str): Unique identifier of the notification.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            None: None result.
+        """
         notification = NotificationRepository.get(db, notification_id)
         if not notification:
             raise NotFoundError("Notification not found")

@@ -21,7 +21,15 @@ class CollectionService:
         db: Session,
         collection: Collection,
     ) -> CollectionResponse:
-        """Convert a Collection ORM object into a response schema."""
+        """To response.
+        
+        Args:
+            db (Session): Database session.
+            collection (Collection): The collection.
+        
+        Returns:
+            CollectionResponse: CollectionResponse payload.
+        """
         return CollectionResponse(
             id=collection.id,
             name=collection.name,
@@ -37,6 +45,15 @@ class CollectionService:
         db: Session,
         user_id: str,
     ) -> list[CollectionResponse]:
+        """List collections.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            list[CollectionResponse]: List of CollectionResponse.
+        """
         collections = CollectionRepository.get_user_collections(db, user_id)
         return [CollectionService.to_response(db, c) for c in collections]
 
@@ -47,6 +64,17 @@ class CollectionService:
         name: str,
         color: str,
     ) -> Collection:
+        """Create collection.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+            name (str): Name string.
+            color (str): Color string.
+        
+        Returns:
+            Collection: Collection result.
+        """
         return CollectionRepository.create(
             db,
             {
@@ -62,6 +90,16 @@ class CollectionService:
         collection_id: str,
         user_id: str,
     ) -> Collection:
+        """Retrieve collection.
+        
+        Args:
+            db (Session): Database session.
+            collection_id (str): Unique identifier of the collection.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            Collection: Collection result.
+        """
         collection = CollectionRepository.get_user_collection(
             db,
             collection_id,
@@ -80,6 +118,17 @@ class CollectionService:
         user_id: str,
         data: dict[str, Any],
     ) -> Collection:
+        """Update collection.
+        
+        Args:
+            db (Session): Database session.
+            collection_id (str): Unique identifier of the collection.
+            user_id (str): Unique identifier of the user.
+            data (dict[str, Any]): The data.
+        
+        Returns:
+            Collection: Collection result.
+        """
         collection = CollectionService.get_collection(
             db,
             collection_id,
@@ -98,6 +147,16 @@ class CollectionService:
         collection_id: str,
         user_id: str,
     ) -> None:
+        """Delete collection.
+        
+        Args:
+            db (Session): Database session.
+            collection_id (str): Unique identifier of the collection.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            None: None result.
+        """
         collection = CollectionService.get_collection(
             db,
             collection_id,
@@ -112,7 +171,16 @@ class CollectionService:
         collection_id: str,
         user_id: str,
     ) -> list[FileResponse]:
-        """Return all files in a collection as response schemas."""
+        """List files.
+        
+        Args:
+            db (Session): Database session.
+            collection_id (str): Unique identifier of the collection.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            list[FileResponse]: List of FileResponse.
+        """
 
         CollectionService.get_collection(
             db,
@@ -137,6 +205,17 @@ class CollectionService:
         file_id: str,
         user_id: str,
     ) -> None:
+        """Add file.
+        
+        Args:
+            db (Session): Database session.
+            collection_id (str): Unique identifier of the collection.
+            file_id (str): Unique identifier of the file.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            None: None result.
+        """
         CollectionService.get_collection(
             db,
             collection_id,
@@ -165,6 +244,17 @@ class CollectionService:
         file_id: str,
         user_id: str,
     ) -> None:
+        """Remove file.
+        
+        Args:
+            db (Session): Database session.
+            collection_id (str): Unique identifier of the collection.
+            file_id (str): Unique identifier of the file.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            None: None result.
+        """
         CollectionService.get_collection(
             db,
             collection_id,
@@ -183,6 +273,16 @@ class CollectionService:
         file_id: str,
         user_id: str,
     ) -> list[Collection]:
+        """Retrieve file collections.
+        
+        Args:
+            db (Session): Database session.
+            file_id (str): Unique identifier of the file.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            list[Collection]: List of Collection.
+        """
         return CollectionRepository.get_file_collections(
             db,
             file_id,

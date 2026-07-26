@@ -15,7 +15,15 @@ class NoteMediaRepository(BaseRepository[NoteMedia]):
 
     @classmethod
     def get_note_media(cls, db: Session, note_id: str) -> list[NoteMedia]:
-        """Fetch all contextual media reference joins tracking to a note."""
+        """Retrieve note media.
+        
+        Args:
+            db (Session): Database session.
+            note_id (str): Unique identifier of the note.
+        
+        Returns:
+            list[NoteMedia]: List of NoteMedia.
+        """
         return (
             db.query(cls.model)
             .filter(cls.model.note_id == note_id)
@@ -30,7 +38,15 @@ class AudioNoteRepository(BaseRepository[AudioNote]):
 
     @classmethod
     def get_user_audio_notes(cls, db: Session, user_id: str) -> list[AudioNote]:
-        """Fetch structural records matching user identification profiles."""
+        """Retrieve user audio notes.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            list[AudioNote]: List of AudioNote.
+        """
         return (
             db.query(cls.model)
             .filter(cls.model.owner_id == user_id)
@@ -41,7 +57,16 @@ class AudioNoteRepository(BaseRepository[AudioNote]):
     def get_secure_by_id(
         cls, db: Session, entity_id: str, user_id: str
     ) -> AudioNote:
-        """Retrieve target item checking multi-tenant security bounds."""
+        """Retrieve secure by ID.
+        
+        Args:
+            db (Session): Database session.
+            entity_id (str): Unique identifier of the target resource.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            AudioNote: AudioNote result.
+        """
         item = db.query(cls.model).filter(cls.model.id == entity_id).first()
         if not item:
             raise NotFoundError("Audio note not found")
@@ -57,7 +82,15 @@ class MediaItemRepository(BaseRepository[MediaItem]):
 
     @classmethod
     def get_user_media(cls, db: Session, user_id: str) -> list[MediaItem]:
-        """Query complete collection lists bounded to the explicit owner."""
+        """Retrieve user media.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            list[MediaItem]: List of MediaItem.
+        """
         return (
             db.query(cls.model)
             .filter(cls.model.owner_id == user_id)
@@ -68,7 +101,16 @@ class MediaItemRepository(BaseRepository[MediaItem]):
     def get_filtered_media(
         cls, db: Session, user_id: str, media_type: MediaType | None = None
     ) -> list[MediaItem]:
-        """Build a tracking block filtered by asset media groupings."""
+        """Retrieve filtered media.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+            media_type (MediaType | None): The media type.
+        
+        Returns:
+            list[MediaItem]: List of MediaItem.
+        """
         query = db.query(cls.model).filter(cls.model.owner_id == user_id)
         if media_type:
             query = query.filter(cls.model.media_type == media_type)
@@ -78,7 +120,16 @@ class MediaItemRepository(BaseRepository[MediaItem]):
     def get_secure_by_id(
         cls, db: Session, entity_id: str, user_id: str
     ) -> MediaItem:
-        """Assert entity allocation bounds before output validation steps."""
+        """Retrieve secure by ID.
+        
+        Args:
+            db (Session): Database session.
+            entity_id (str): Unique identifier of the target resource.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            MediaItem: MediaItem result.
+        """
         item = db.query(cls.model).filter(cls.model.id == entity_id).first()
         if not item:
             raise NotFoundError("Media item not found")

@@ -12,7 +12,14 @@ from app.core.logger import setup_logging
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    """Handle startup and shutdown tasks for the application."""
+    """Lifespan.
+    
+    Args:
+        _ (FastAPI): The  .
+    
+    Returns:
+        AsyncIterator[None]: AsyncIterator[None] result.
+    """
     setup_logging()
 
     upload_dir = Path(settings.UPLOAD_DIR)

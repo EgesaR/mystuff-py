@@ -19,17 +19,42 @@ class BaseRepository[ModelT]:
 
     @classmethod
     def get(cls, db: Session, object_id: UUID | str) -> ModelT | None:
-        """Fetch a single record by ID."""
+        """Retrieve.
+        
+        Args:
+            db (Session): Database session.
+            object_id (UUID | str): Unique identifier of the target resource.
+        
+        Returns:
+            ModelT | None: ModelT or None.
+        """
         return db.query(cls.model).filter(cls.model.id == object_id).first()  # type: ignore
 
     @classmethod
     def get_all(cls, db: Session, skip: int = 0, limit: int = 100) -> list[ModelT]:
-        """Fetch a paginated list of records."""
+        """Retrieve all.
+        
+        Args:
+            db (Session): Database session.
+            skip (int): Skip integer.
+            limit (int): Limit integer.
+        
+        Returns:
+            list[ModelT]: List of ModelT.
+        """
         return db.query(cls.model).offset(skip).limit(limit).all()
 
     @classmethod
     def create(cls, db: Session, obj_in: dict[str, Any]) -> ModelT:
-        """Create a new record."""
+        """Create.
+        
+        Args:
+            db (Session): Database session.
+            obj_in (dict[str, Any]): The obj in.
+        
+        Returns:
+            ModelT: ModelT result.
+        """
         db_obj = cls.model(**obj_in)
         try:
             db.add(db_obj)
@@ -44,7 +69,16 @@ class BaseRepository[ModelT]:
     def update(
         cls, db: Session, db_obj: ModelT, update_data: dict[str, Any]
     ) -> ModelT:
-        """Update an existing record."""
+        """Update.
+        
+        Args:
+            db (Session): Database session.
+            db_obj (ModelT): The db obj.
+            update_data (dict[str, Any]): The update data.
+        
+        Returns:
+            ModelT: ModelT result.
+        """
         try:
             for field, value in update_data.items():
                 setattr(db_obj, field, value)
@@ -57,7 +91,15 @@ class BaseRepository[ModelT]:
 
     @classmethod
     def delete(cls, db: Session, db_obj: ModelT) -> None:
-        """Delete a record."""
+        """Delete.
+        
+        Args:
+            db (Session): Database session.
+            db_obj (ModelT): The db obj.
+        
+        Returns:
+            None: None result.
+        """
         try:
             db.delete(db_obj)
             db.commit()
@@ -67,7 +109,15 @@ class BaseRepository[ModelT]:
 
     @classmethod
     def exists(cls, db: Session, object_id: UUID | str) -> bool:
-        """Check if a record exists by ID."""
+        """Exists.
+        
+        Args:
+            db (Session): Database session.
+            object_id (UUID | str): Unique identifier of the target resource.
+        
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         return (
             db.query(cls.model.id)  # type: ignore
             .filter(cls.model.id == object_id)  # type: ignore
@@ -78,6 +128,13 @@ class BaseRepository[ModelT]:
 
     @classmethod
     def count(cls, db: Session) -> int:
-        """Count the total number of records."""
+        """Count.
+        
+        Args:
+            db (Session): Database session.
+        
+        Returns:
+            int: int result.
+        """
         # pylint: disable=not-callable
         return db.query(func.count(cls.model.id)).scalar() or 0  # type: ignore

@@ -44,7 +44,15 @@ def list_audio_notes(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[Any]:
-    """Retrieve all audio notes matching the context profile identifier."""
+    """List audio notes.
+    
+    Args:
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        list[Any]: List of Any.
+    """
     return MediaService.list_audio_notes(db, user_id=current_user.id)
 
 
@@ -61,7 +69,18 @@ async def upload_audio_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Any:
-    """Validate asset content typing and register incoming voice notes."""
+    """Upload audio note.
+    
+    Args:
+        file (UploadFile): The file.
+        title (str): Title string.
+        duration_sec (float | None): The duration sec.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        Any: Result value.
+    """
     if not file.content_type or not file.content_type.startswith("audio/"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -93,7 +112,16 @@ def get_audio_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Any:
-    """Fetch an audio entity tracking reference by its unique token."""
+    """Retrieve audio note.
+    
+    Args:
+        note_id (str): Unique identifier of the note.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        Any: Result value.
+    """
     try:
         return MediaService.get_audio_note(
             db, note_id=note_id, user_id=current_user.id
@@ -118,7 +146,16 @@ def delete_audio_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
-    """Remove target operational file structures and table assets."""
+    """Delete audio note.
+    
+    Args:
+        note_id (str): Unique identifier of the note.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        None: None result.
+    """
     try:
         MediaService.delete_audio_note(
             db, note_id=note_id, user_id=current_user.id
@@ -150,7 +187,16 @@ def list_gallery(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[Any]:
-    """Retrieve indexed items stored across user visual asset structures."""
+    """List gallery.
+    
+    Args:
+        media_type (MediaType | None): The media type.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        list[Any]: List of Any.
+    """
     return MediaService.list_gallery(
         db, user_id=current_user.id, media_type=media_type
     )
@@ -168,7 +214,17 @@ async def upload_gallery_item(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Any:
-    """Receive and index new incoming graphical or multi-format media."""
+    """Upload gallery item.
+    
+    Args:
+        file (UploadFile): The file.
+        title (str | None): The title.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        Any: Result value.
+    """
     try:
         # Fixed: Removed 'await' since service method is synchronous
         return MediaService.upload_gallery_item(
@@ -193,7 +249,16 @@ def get_gallery_item(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Any:
-    """Look up item metadata definitions tied to structural file paths."""
+    """Retrieve gallery item.
+    
+    Args:
+        item_id (str): Unique identifier of the target resource.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        Any: Result value.
+    """
     try:
         return MediaService.get_gallery_item(
             db, item_id=item_id, user_id=current_user.id
@@ -218,7 +283,16 @@ def delete_gallery_item(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
-    """Purge targeted gallery structures safely across storage maps."""
+    """Delete gallery item.
+    
+    Args:
+        item_id (str): Unique identifier of the target resource.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        None: None result.
+    """
     try:
         MediaService.delete_gallery_item(
             db, item_id=item_id, user_id=current_user.id

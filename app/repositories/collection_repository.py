@@ -14,6 +14,15 @@ class CollectionRepository:
 
     @staticmethod
     def create(db: Session, obj_in: dict[str, Any]) -> Collection:
+        """Create.
+        
+        Args:
+            db (Session): Database session.
+            obj_in (dict[str, Any]): The obj in.
+        
+        Returns:
+            Collection: Collection result.
+        """
         collection = Collection(**obj_in)
         db.add(collection)
         db.commit()
@@ -22,12 +31,31 @@ class CollectionRepository:
 
     @staticmethod
     def get(db: Session, collection_id: str) -> Collection | None:
+        """Retrieve.
+        
+        Args:
+            db (Session): Database session.
+            collection_id (str): Unique identifier of the collection.
+        
+        Returns:
+            Collection | None: Collection or None.
+        """
         return db.get(Collection, collection_id)
 
     @staticmethod
     def get_user_collection(
         db: Session, collection_id: str, user_id: str
     ) -> Collection | None:
+        """Retrieve user collection.
+        
+        Args:
+            db (Session): Database session.
+            collection_id (str): Unique identifier of the collection.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            Collection | None: Collection or None.
+        """
         stmt = select(Collection).where(
             Collection.id == collection_id, Collection.owner_id == user_id
         )
@@ -35,6 +63,15 @@ class CollectionRepository:
 
     @staticmethod
     def get_user_collections(db: Session, user_id: str) -> list[Collection]:
+        """Retrieve user collections.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            list[Collection]: List of Collection.
+        """
         stmt = (
             select(Collection)
             .where(Collection.owner_id == user_id)
@@ -48,6 +85,16 @@ class CollectionRepository:
         db_obj: Collection, 
         update_data: dict[str, Any]
     ) -> Collection:
+        """Update.
+        
+        Args:
+            db (Session): Database session.
+            db_obj (Collection): The db obj.
+            update_data (dict[str, Any]): The update data.
+        
+        Returns:
+            Collection: Collection result.
+        """
         for field, value in update_data.items():
             if hasattr(db_obj, field):
                 setattr(db_obj, field, value)
@@ -58,11 +105,29 @@ class CollectionRepository:
 
     @staticmethod
     def delete(db: Session, db_obj: Collection) -> None:
+        """Delete.
+        
+        Args:
+            db (Session): Database session.
+            db_obj (Collection): The db obj.
+        
+        Returns:
+            None: None result.
+        """
         db.delete(db_obj)
         db.commit()
 
     @staticmethod
     def get_files(db: Session, collection_id: str) -> list[File]:
+        """Retrieve files.
+        
+        Args:
+            db (Session): Database session.
+            collection_id (str): Unique identifier of the collection.
+        
+        Returns:
+            list[File]: List of File.
+        """
         stmt = (
             select(File)
             .join(CollectionFile, CollectionFile.file_id == File.id)
@@ -73,6 +138,15 @@ class CollectionRepository:
 
     @staticmethod
     def file_count(db: Session, collection_id: str) -> int:
+        """File count.
+        
+        Args:
+            db (Session): Database session.
+            collection_id (str): Unique identifier of the collection.
+        
+        Returns:
+            int: int result.
+        """
         stmt = select(CollectionFile).where(
             CollectionFile.collection_id == collection_id
         )
@@ -80,6 +154,16 @@ class CollectionRepository:
 
     @staticmethod
     def is_member(db: Session, collection_id: str, file_id: str) -> bool:
+        """Return whether member.
+        
+        Args:
+            db (Session): Database session.
+            collection_id (str): Unique identifier of the collection.
+            file_id (str): Unique identifier of the file.
+        
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         stmt = select(CollectionFile).where(
             CollectionFile.collection_id == collection_id,
             CollectionFile.file_id == file_id,
@@ -88,9 +172,15 @@ class CollectionRepository:
 
     @staticmethod
     def add_file(db: Session, collection_id: str, file_id: str) -> CollectionFile | None:
-        """Add a file to a collection. Idempotent — returns None (no-op) if
-        the file is already a member instead of raising a unique-constraint
-        error, since "add to collection" is naturally a toggle-safe action.
+        """Add file.
+        
+        Args:
+            db (Session): Database session.
+            collection_id (str): Unique identifier of the collection.
+            file_id (str): Unique identifier of the file.
+        
+        Returns:
+            CollectionFile | None: CollectionFile or None.
         """
         if CollectionRepository.is_member(db, collection_id, file_id):
             return None
@@ -101,6 +191,16 @@ class CollectionRepository:
 
     @staticmethod
     def remove_file(db: Session, collection_id: str, file_id: str) -> bool:
+        """Remove file.
+        
+        Args:
+            db (Session): Database session.
+            collection_id (str): Unique identifier of the collection.
+            file_id (str): Unique identifier of the file.
+        
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         stmt = select(CollectionFile).where(
             CollectionFile.collection_id == collection_id,
             CollectionFile.file_id == file_id,
@@ -116,6 +216,16 @@ class CollectionRepository:
     def get_file_collections(
         db: Session, file_id: str, user_id: str
     ) -> list[Collection]:
+        """Retrieve file collections.
+        
+        Args:
+            db (Session): Database session.
+            file_id (str): Unique identifier of the file.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            list[Collection]: List of Collection.
+        """
         stmt = (
             select(Collection)
             .join(CollectionFile, CollectionFile.collection_id == Collection.id)

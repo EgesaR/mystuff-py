@@ -51,7 +51,16 @@ def list_folders(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[FolderResponse]:
-    """Fetch user folder directories filtered by hierarchy context."""
+    """List folders.
+    
+    Args:
+        parent_id (str | None): Unique identifier of the target resource.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        list[FolderResponse]: List of FolderResponse.
+    """
     return FolderService.list_folders(
         db, user_id=current_user.id, parent_id=parent_id
     )
@@ -68,7 +77,16 @@ def create_folder(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> FolderResponse:
-    """Instantiate a new directory folder resource under user scope."""
+    """Create folder.
+    
+    Args:
+        payload (FolderCreate): Request payload.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        FolderResponse: FolderResponse payload.
+    """
     try:
         return FolderService.create_folder(
             db,
@@ -100,7 +118,17 @@ def update_folder(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> FolderResponse:
-    """Modify styling or nomenclature attributes of a specified folder."""
+    """Update folder.
+    
+    Args:
+        folder_id (str): Unique identifier of the folder.
+        payload (FolderUpdate): Request payload.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        FolderResponse: FolderResponse payload.
+    """
     try:
         return FolderService.update_folder(
             db,
@@ -128,7 +156,16 @@ def delete_folder(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
-    """Remove target folder structural assets and cascaded components."""
+    """Delete folder.
+    
+    Args:
+        folder_id (str): Unique identifier of the folder.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        None: None result.
+    """
     try:
         FolderService.delete_folder(
             db, folder_id=folder_id, user_id=current_user.id
@@ -153,7 +190,16 @@ def folder_tree(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> FolderResponse:
-    """Construct an object-graph tree of nested subfolder dependencies."""
+    """Folder tree.
+    
+    Args:
+        folder_id (str): Unique identifier of the folder.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        FolderResponse: FolderResponse payload.
+    """
     try:
         return FolderService.get_folder_tree(
             db, folder_id=folder_id, user_id=current_user.id
@@ -183,7 +229,16 @@ def list_files(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[FileResponse]:
-    """Retrieve catalog list of user files isolated by folder scope."""
+    """List files.
+    
+    Args:
+        folder_id (str | None): Unique identifier of the folder.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        list[FileResponse]: List of FileResponse.
+    """
     return FileService.list_files(
         db, user_id=current_user.id, folder_id=folder_id
     )
@@ -203,7 +258,19 @@ async def upload_file(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> FileResponse:
-    """Process stream upload binaries, routing destination targets safely."""
+    """Upload file.
+    
+    Args:
+        background_tasks (BackgroundTasks): The background tasks.
+        file (UploadFile): The file.
+        folder_id (str | None): Unique identifier of the folder.
+        name (str | None): The name.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        FileResponse: FileResponse payload.
+    """
     try:
         created = await FileService.upload_file(
             db,

@@ -18,7 +18,15 @@ class MediaService:
 
     @staticmethod
     def list_audio_notes(db: Session, user_id: str) -> list[AudioNote]:
-        """Fetch all recorded audio elements belonging to the targeted user."""
+        """List audio notes.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            list[AudioNote]: List of AudioNote.
+        """
         return AudioNoteRepository.get_user_audio_notes(db, user_id=user_id)
 
     @staticmethod
@@ -29,7 +37,18 @@ class MediaService:
         title: str,
         duration_sec: float | None = None,
     ) -> AudioNote:
-        """Process an incoming file stream and register a new audio model."""
+        """Upload audio note.
+        
+        Args:
+            db (Session): Database session.
+            upload (UploadFile): The upload.
+            owner_id (str): Unique identifier of the target resource.
+            title (str): Title string.
+            duration_sec (float | None): The duration sec.
+        
+        Returns:
+            AudioNote: AudioNote result.
+        """
         mock_url = f"https://storage.local/audio/{upload.filename}"
 
         audio_data = {
@@ -42,14 +61,32 @@ class MediaService:
 
     @staticmethod
     def get_audio_note(db: Session, note_id: str, user_id: str) -> AudioNote:
-        """Look up an individual audio instance reference securely."""
+        """Retrieve audio note.
+        
+        Args:
+            db (Session): Database session.
+            note_id (str): Unique identifier of the note.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            AudioNote: AudioNote result.
+        """
         return AudioNoteRepository.get_secure_by_id(
             db, entity_id=note_id, user_id=user_id
         )
 
     @staticmethod
     def delete_audio_note(db: Session, note_id: str, user_id: str) -> None:
-        """Verify boundaries and delete a specific audio note entry."""
+        """Delete audio note.
+        
+        Args:
+            db (Session): Database session.
+            note_id (str): Unique identifier of the note.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            None: None result.
+        """
         audio_note = AudioNoteRepository.get_secure_by_id(
             db, entity_id=note_id, user_id=user_id
         )
@@ -60,7 +97,16 @@ class MediaService:
     def list_gallery(
         db: Session, user_id: str, media_type: MediaType | None = None
     ) -> list[MediaItem]:
-        """Query and filter visual items assigned to the profile."""
+        """List gallery.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+            media_type (MediaType | None): The media type.
+        
+        Returns:
+            list[MediaItem]: List of MediaItem.
+        """
         return MediaItemRepository.get_filtered_media(
             db, user_id=user_id, media_type=media_type
         )
@@ -72,7 +118,17 @@ class MediaService:
         owner_id: str,
         title: str | None = None,
     ) -> MediaItem:
-        """Process assets and store matching metadata attributes."""
+        """Upload gallery item.
+        
+        Args:
+            db (Session): Database session.
+            upload (UploadFile): The upload.
+            owner_id (str): Unique identifier of the target resource.
+            title (str | None): The title.
+        
+        Returns:
+            MediaItem: MediaItem result.
+        """
         mock_url = f"https://storage.local/gallery/{upload.filename}"
 
         content_type = upload.content_type or ""
@@ -93,14 +149,32 @@ class MediaService:
 
     @staticmethod
     def get_gallery_item(db: Session, item_id: str, user_id: str) -> MediaItem:
-        """Securely verify structural metadata for a visual item token."""
+        """Retrieve gallery item.
+        
+        Args:
+            db (Session): Database session.
+            item_id (str): Unique identifier of the target resource.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            MediaItem: MediaItem result.
+        """
         return MediaItemRepository.get_secure_by_id(
             db, entity_id=item_id, user_id=user_id
         )
 
     @staticmethod
     def delete_gallery_item(db: Session, item_id: str, user_id: str) -> None:
-        """Purge data rows matching the designated media storage locator."""
+        """Delete gallery item.
+        
+        Args:
+            db (Session): Database session.
+            item_id (str): Unique identifier of the target resource.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            None: None result.
+        """
         media_item = MediaItemRepository.get_secure_by_id(
             db, entity_id=item_id, user_id=user_id
         )
@@ -109,7 +183,16 @@ class MediaService:
 
     @staticmethod
     def attach_media_to_note(db: Session, note_id: str, media_id: str) -> Any:
-        """Bind secondary asset tracking keys to explicit note blocks."""
+        """Attach media to note.
+        
+        Args:
+            db (Session): Database session.
+            note_id (str): Unique identifier of the note.
+            media_id (str): Unique identifier of the target resource.
+        
+        Returns:
+            Any: Result value.
+        """
         from app.repositories.note_repository import NoteRepository
 
         return NoteRepository.create(

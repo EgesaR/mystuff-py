@@ -24,10 +24,15 @@ def _build_recogniser(
     rule2_silence: float = 1.2,
     utterance_length: int = 300,
 ) -> Any:
-    """
-    Build a sherpa_onnx OnlineRecognizer with the given silence thresholds.
-    Raises ImportError if sherpa_onnx is not installed.
-    Raises FileNotFoundError if the model files are missing.
+    """Build recogniser.
+    
+    Args:
+        rule1_silence (float): The rule1 silence.
+        rule2_silence (float): The rule2 silence.
+        utterance_length (int): Utterance length integer.
+    
+    Returns:
+        Any: Result value.
     """
     try:
         import sherpa_onnx  # type: ignore
@@ -62,9 +67,10 @@ class TranscriptionService:
 
     @staticmethod
     def build_speech_recogniser() -> Any:
-        """
-        Recogniser tuned for standard speech dictation.
-        rule1=2.4s, rule2=1.2s — normal conversational pauses.
+        """Build speech recogniser.
+        
+        Returns:
+            Any: Result value.
         """
         logger.info("Loading speech recogniser from %s …", _MODEL_DIR)
         return _build_recogniser(
@@ -75,10 +81,10 @@ class TranscriptionService:
 
     @staticmethod
     def build_lyrics_recogniser() -> Any:
-        """
-        Recogniser tuned for singing / lyrics:
-        - Longer silences: singers hold notes and breathe between phrases
-        - Shorter utterance length: lyric lines are naturally shorter
+        """Build lyrics recogniser.
+        
+        Returns:
+            Any: Result value.
         """
         logger.info("Loading lyrics recogniser from %s …", _MODEL_DIR)
         return _build_recogniser(
@@ -91,9 +97,14 @@ class TranscriptionService:
 
     @staticmethod
     def submit_correction(raw: str, corrected: str) -> dict[str, Any]:
-        """
-        Learn a correction pair and return a summary of the updated profile.
-        Called by the /accent/correct REST endpoint.
+        """Submit correction.
+        
+        Args:
+            raw (str): Raw string.
+            corrected (str): Corrected string.
+        
+        Returns:
+            dict[str, Any]: Response payload.
         """
         learner = get_learner()
         count = learner.learn(raw, corrected)
@@ -109,7 +120,11 @@ class TranscriptionService:
 
     @staticmethod
     def get_profile() -> dict[str, Any]:
-        """Return the full accent profile for inspection."""
+        """Retrieve profile.
+        
+        Returns:
+            dict[str, Any]: Response payload.
+        """
         learner = get_learner()
         # Safely read protected _builtin map using getattr to satisfy strict linters
         builtin_rules = getattr(learner, "_builtin", {})
@@ -123,6 +138,13 @@ class TranscriptionService:
 
     @staticmethod
     def forget_correction(raw_token: str) -> dict[str, Any]:
-        """Remove all learned corrections for a specific raw token."""
+        """Forget correction.
+        
+        Args:
+            raw_token (str): Raw token string.
+        
+        Returns:
+            dict[str, Any]: Response payload.
+        """
         get_learner().forget(raw_token)
         return {"removed": raw_token}

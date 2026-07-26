@@ -13,12 +13,28 @@ class UserRepository(BaseRepository[User]):
 
     @classmethod
     def get_by_email(cls, db: Session, email: str) -> User | None:
-        """Retrieve a user by their email address."""
+        """Retrieve by email.
+        
+        Args:
+            db (Session): Database session.
+            email (str): Email address.
+        
+        Returns:
+            User | None: User data.
+        """
         return db.query(cls.model).filter(cls.model.email == email).first()
 
     @classmethod
     def get_by_username(cls, db: Session, username: str) -> User | None:
-        """Retrieve a user by their username."""
+        """Retrieve by username.
+        
+        Args:
+            db (Session): Database session.
+            username (str): Username.
+        
+        Returns:
+            User | None: User data.
+        """
         return db.query(cls.model).filter(cls.model.username == username).first()
 
     @classmethod
@@ -31,7 +47,18 @@ class UserRepository(BaseRepository[User]):
         hashed_password: str,
         full_name: str | None = None,
     ) -> User:
-        """Create and persist a new user record."""
+        """Create user.
+        
+        Args:
+            db (Session): Database session.
+            email (str): Email address.
+            username (str): Username.
+            hashed_password (str): Hashed password string.
+            full_name (str | None): User full name.
+        
+        Returns:
+            User: User data.
+        """
         user = cls.model(
             email=email,
             username=username,

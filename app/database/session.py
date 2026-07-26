@@ -30,8 +30,12 @@ SessionLocal = sessionmaker(
 )
 
 
-def get_db() -> Generator[Session, None, None]:
-    """Create and yield a database session."""
+def get_db() -> Generator[Session]:
+    """Create and yield a database session.
+    
+    Returns:
+        Generator[Session]: Generator yielding Session.
+    """
     db = SessionLocal()
 
     try:

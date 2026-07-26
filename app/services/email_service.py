@@ -15,7 +15,16 @@ class EmailService:
 
     @staticmethod
     def send_email(to: str, subject: str, html: str) -> bool:
-        """Sends an email via SMTP or logs it if in demo mode."""
+        """Send email.
+        
+        Args:
+            to (str): To string.
+            subject (str): Subject string.
+            html (str): Html string.
+        
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         if settings.DEMO_MODE:
             # Fixed: Use lazy % formatting to satisfy Pylint W1203
             logger.info("[DEMO EMAIL] %s | %s", to, subject)
@@ -45,7 +54,16 @@ class EmailService:
 
     @staticmethod
     def send_reset_code(email: str, code: str, username: str) -> bool:
-        """Sends a password reset code email."""
+        """Send reset code.
+        
+        Args:
+            email (str): Email address.
+            code (str): Verification or reset code.
+            username (str): Username.
+        
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         html = f"""
         <h2>Password Reset</h2>
         <p>Hello {username},</p>

@@ -23,14 +23,30 @@ class BaseStorageProvider(ABC):
         subfolder: str,
         filename: str,
     ) -> str:
-        """Upload a file and return its accessible URL or relative path."""
+        """Upload.
+        
+        Args:
+            file (UploadFile): The file.
+            subfolder (str): Subfolder string.
+            filename (str): Filename string.
+        
+        Returns:
+            str: Processed string result.
+        """
 
     @abstractmethod
     async def delete(
         self,
         path_or_url: str,
     ) -> bool:
-        """Delete a file by its path or URL."""
+        """Delete.
+        
+        Args:
+            path_or_url (str): Path or url string.
+        
+        Returns:
+            bool: True if successful, False otherwise.
+        """
 
 
 class LocalStorageProvider(BaseStorageProvider):
@@ -41,6 +57,15 @@ class LocalStorageProvider(BaseStorageProvider):
         base_dir: str | Path | None = None,
         base_url: str = "/uploads",
     ) -> None:
+        """Init.
+        
+        Args:
+            base_dir (str | Path | None): The base dir.
+            base_url (str): Base url string.
+        
+        Returns:
+            None: None result.
+        """
         self.base_dir = Path(base_dir or settings.UPLOAD_DIR)
         self.base_url = base_url.rstrip("/")
 
@@ -50,7 +75,16 @@ class LocalStorageProvider(BaseStorageProvider):
         subfolder: str,
         filename: str,
     ) -> str:
-        """Save an uploaded file to local disk asynchronously."""
+        """Upload.
+        
+        Args:
+            file (UploadFile): The file.
+            subfolder (str): Subfolder string.
+            filename (str): Filename string.
+        
+        Returns:
+            str: Processed string result.
+        """
 
         target_dir = self.base_dir / subfolder
         target_dir.mkdir(
@@ -63,6 +97,11 @@ class LocalStorageProvider(BaseStorageProvider):
         await file.seek(0)
 
         def _write_file() -> None:
+            """Write file.
+            
+            Returns:
+                None: None result.
+            """
             with file_path.open("wb") as buffer:
                 shutil.copyfileobj(
                     file.file,
@@ -81,7 +120,14 @@ class LocalStorageProvider(BaseStorageProvider):
         self,
         path_or_url: str,
     ) -> bool:
-        """Delete a local file using its path or URL."""
+        """Delete.
+        
+        Args:
+            path_or_url (str): Path or url string.
+        
+        Returns:
+            bool: True if successful, False otherwise.
+        """
 
         cleaned_path = path_or_url
 
@@ -114,6 +160,11 @@ class S3StorageProvider(BaseStorageProvider):
     """Handles storing and deleting files in S3-compatible storage."""
 
     def __init__(self) -> None:
+        """Init.
+        
+        Returns:
+            None: None result.
+        """
         try:
             import boto3  # type: ignore
         except ImportError as exc:
@@ -174,7 +225,16 @@ class S3StorageProvider(BaseStorageProvider):
         subfolder: str,
         filename: str,
     ) -> str:
-        """Upload a file object to S3/R2 asynchronously."""
+        """Upload.
+        
+        Args:
+            file (UploadFile): The file.
+            subfolder (str): Subfolder string.
+            filename (str): Filename string.
+        
+        Returns:
+            str: Processed string result.
+        """
 
         object_name = (
             f"{subfolder}/{filename}"
@@ -183,6 +243,11 @@ class S3StorageProvider(BaseStorageProvider):
         await file.seek(0)
 
         def _upload_file() -> None:
+            """Upload file.
+            
+            Returns:
+                None: None result.
+            """
             extra_args: dict[str, str] = {
                 "ContentType": file.content_type or "application/octet-stream",
                 "ContentDisposition": "attachment"
@@ -226,7 +291,14 @@ class S3StorageProvider(BaseStorageProvider):
         self,
         path_or_url: str,
     ) -> bool:
-        """Delete an object from S3/R2 bucket."""
+        """Delete.
+        
+        Args:
+            path_or_url (str): Path or url string.
+        
+        Returns:
+            bool: True if successful, False otherwise.
+        """
 
         parsed = urlparse(path_or_url)
 
@@ -264,9 +336,10 @@ _storage: BaseStorageProvider | None = None
 
 
 def get_storage_provider() -> BaseStorageProvider:
-    """
-        Factory function to select storage provider.
-        Return the configured storage provider singleton.
+    """Retrieve storage provider.
+    
+    Returns:
+        BaseStorageProvider: BaseStorageProvider result.
     """
 
     global _storage
@@ -274,10 +347,7 @@ def get_storage_provider() -> BaseStorageProvider:
     if _storage is None:
         provider_type = settings.STORAGE_PROVIDER.lower()
 
-        if provider_type in ("s3", "r2", "cloud"):
-            _storage = S3StorageProvider()
-        else:
-            _storage = LocalStorageProvider()
+        _storage = S3StorageProvider() if provider_type in ("s3", "r2", "cloud") else LocalStorageProvider()
             
     assert _storage is not None
     

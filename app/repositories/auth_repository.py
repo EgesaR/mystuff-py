@@ -18,7 +18,17 @@ class RefreshTokenRepository(BaseRepository[RefreshToken]):
     def create_token(
         cls, db: Session, *, token: str, user_id: str, expires_at: datetime
     ) -> RefreshToken:
-        """Create a new refresh token record."""
+        """Create token.
+        
+        Args:
+            db (Session): Database session.
+            token (str): Token string.
+            user_id (str): Unique identifier of the user.
+            expires_at (datetime): The expires at.
+        
+        Returns:
+            RefreshToken: RefreshToken result.
+        """
         refresh_token = cls.model(
             token=token, user_id=user_id, expires_at=expires_at
         )
@@ -33,7 +43,15 @@ class RefreshTokenRepository(BaseRepository[RefreshToken]):
 
     @classmethod
     def get_valid_token(cls, db: Session, token: str) -> RefreshToken | None:
-        """Retrieve a valid, non-revoked, unexpired refresh token."""
+        """Retrieve valid token.
+        
+        Args:
+            db (Session): Database session.
+            token (str): Token string.
+        
+        Returns:
+            RefreshToken | None: RefreshToken or None.
+        """
         return (
             db.query(cls.model)
             .filter(
@@ -46,7 +64,15 @@ class RefreshTokenRepository(BaseRepository[RefreshToken]):
 
     @classmethod
     def revoke_token(cls, db: Session, refresh_token: RefreshToken) -> RefreshToken:
-        """Revoke a specific refresh token."""
+        """Revoke token.
+        
+        Args:
+            db (Session): Database session.
+            refresh_token (RefreshToken): The refresh token.
+        
+        Returns:
+            RefreshToken: RefreshToken result.
+        """
         refresh_token.revoked = True
         try:
             db.commit()
@@ -58,7 +84,15 @@ class RefreshTokenRepository(BaseRepository[RefreshToken]):
 
     @classmethod
     def revoke_all_user_tokens(cls, db: Session, user_id: str) -> int:
-        """Revoke all active tokens for a given user."""
+        """Revoke all user tokens.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            int: int result.
+        """
         try:
             count = (
                 db.query(cls.model)
@@ -82,7 +116,17 @@ class PasswordResetRepository(BaseRepository[PasswordResetToken]):
     def create_token(
         cls, db: Session, *, token: str, user_id: str, expires_at: datetime
     ) -> PasswordResetToken:
-        """Create a new password reset token."""
+        """Create token.
+        
+        Args:
+            db (Session): Database session.
+            token (str): Token string.
+            user_id (str): Unique identifier of the user.
+            expires_at (datetime): The expires at.
+        
+        Returns:
+            PasswordResetToken: PasswordResetToken result.
+        """
         reset_token = cls.model(
             token=token, user_id=user_id, expires_at=expires_at
         )
@@ -97,7 +141,15 @@ class PasswordResetRepository(BaseRepository[PasswordResetToken]):
 
     @classmethod
     def get_valid_token(cls, db: Session, token: str) -> PasswordResetToken | None:
-        """Retrieve a valid, unused, unexpired password reset token."""
+        """Retrieve valid token.
+        
+        Args:
+            db (Session): Database session.
+            token (str): Token string.
+        
+        Returns:
+            PasswordResetToken | None: PasswordResetToken or None.
+        """
         return (
             db.query(cls.model)
             .filter(
@@ -112,7 +164,15 @@ class PasswordResetRepository(BaseRepository[PasswordResetToken]):
     def mark_used(
         cls, db: Session, reset_token: PasswordResetToken
     ) -> PasswordResetToken:
-        """Mark a password reset token as used."""
+        """Mark used.
+        
+        Args:
+            db (Session): Database session.
+            reset_token (PasswordResetToken): The reset token.
+        
+        Returns:
+            PasswordResetToken: PasswordResetToken result.
+        """
         reset_token.used = True
         try:
             db.commit()

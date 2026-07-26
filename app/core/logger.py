@@ -5,7 +5,11 @@ from logging.config import dictConfig
 
 
 def setup_logging() -> None:
-    """Initialize the application logging configuration."""
+    """Set up logging.
+    
+    Returns:
+        None: None result.
+    """
     dictConfig(
         {
             "version": 1,

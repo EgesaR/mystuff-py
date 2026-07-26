@@ -16,10 +16,19 @@ class RecognizerState:
     """Holds the lazy-loaded speech recognizer instance."""
 
     def __init__(self) -> None:
+        """Init.
+        
+        Returns:
+            None: None result.
+        """
         self._instance = None
 
     def get(self):
-        """Return the lazily-loaded recognizer instance."""
+        """Retrieve.
+        
+        Returns:
+            Any: Result value.
+        """
         if self._instance is None:
             self._instance = TranscriptionService.build_speech_recogniser()
         return self._instance
@@ -31,7 +40,14 @@ state = RecognizerState()
 
 @router.websocket("/ws/dictate")
 async def ws_dictate(websocket: WebSocket) -> None:
-    """Standard speech-to-text WebSocket handler."""
+    """Ws dictate.
+    
+    Args:
+        websocket (WebSocket): The websocket.
+    
+    Returns:
+        None: None result.
+    """
     recogniser = state.get()
     await websocket.accept()
     stream = recogniser.create_stream()

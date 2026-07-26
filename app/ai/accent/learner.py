@@ -21,7 +21,15 @@ AccentFamily = Literal["east_african", "indian",
 
 
 def _extract_substitutions(raw: str, corrected: str) -> list[tuple[str, str]]:
-    """Diff two strings at word level; return (raw_word, correct_word) pairs."""
+    """Extract substitutions.
+    
+    Args:
+        raw (str): Raw string.
+        corrected (str): Corrected string.
+    
+    Returns:
+        list[tuple[str, str]]: List of tuple[str, str].
+    """
     raw_words = raw.lower().split()
     cor_words = corrected.lower().split()
     matcher = SequenceMatcher(None, raw_words, cor_words)
@@ -60,6 +68,16 @@ class AccentLearner:
         accent_family: AccentFamily = "auto",
         min_confidence: int = 2,
     ) -> None:
+        """Init.
+        
+        Args:
+            profile_path (Path): The profile path.
+            accent_family (AccentFamily): The accent family.
+            min_confidence (int): Min confidence integer.
+        
+        Returns:
+            None: None result.
+        """
         self.profile_path = profile_path
         self.min_confidence = min_confidence
 
@@ -76,6 +94,11 @@ class AccentLearner:
     # ── Persistence ───────────────────────────────────────────────────────────
 
     def _load(self) -> None:
+        """Load.
+        
+        Returns:
+            None: None result.
+        """
         if self.profile_path.exists():
             try:
                 data = json.loads(
@@ -87,7 +110,11 @@ class AccentLearner:
                 pass
 
     def save(self) -> None:
-        """Persist learned corrections to disk."""
+        """Save.
+        
+        Returns:
+            None: None result.
+        """
         self.profile_path.parent.mkdir(parents=True, exist_ok=True)
         serialisable = {raw: dict(corrections)
                         for raw, corrections in self._learned.items()}
@@ -99,7 +126,15 @@ class AccentLearner:
     # ── Learning ─────────────────────────────────────────────────────────────
 
     def learn(self, raw_text: str, corrected_text: str) -> int:
-        """Register a correction. Returns number of pairs extracted."""
+        """Learn.
+        
+        Args:
+            raw_text (str): Raw text string.
+            corrected_text (str): Corrected text string.
+        
+        Returns:
+            int: int result.
+        """
         pairs = _extract_substitutions(raw_text, corrected_text)
         for raw_token, cor_token in pairs:
             self._learned[raw_token][cor_token] += 1
@@ -108,13 +143,24 @@ class AccentLearner:
         return len(pairs)
 
     def forget(self, raw_token: str) -> None:
-        """Remove all learned corrections for a token."""
+        """Forget.
+        
+        Args:
+            raw_token (str): Raw token string.
+        
+        Returns:
+            None: None result.
+        """
         self._learned.pop(raw_token.lower(), None)
         self.save()
 
     @property
     def learned_rules(self) -> dict[str, str]:
-        """High-confidence corrections only (count ≥ min_confidence)."""
+        """Learned rules.
+        
+        Returns:
+            dict[str, str]: Response payload.
+        """
         rules: dict[str, str] = {}
         for raw, corrections in self._learned.items():
             best = max(corrections, key=lambda c,
@@ -126,7 +172,14 @@ class AccentLearner:
     # ── Application ───────────────────────────────────────────────────────────
 
     def apply(self, text: str) -> str:
-        """Apply pre-built + learned corrections to a transcript."""
+        """Apply.
+        
+        Args:
+            text (str): Text to process.
+        
+        Returns:
+            str: Processed string result.
+        """
         if not text:
             return text
 
@@ -167,6 +220,11 @@ class AccentLearner:
     # ── Introspection ─────────────────────────────────────────────────────────
 
     def summary(self) -> str:
+        """Summary.
+        
+        Returns:
+            str: Processed string result.
+        """
         rules = self.learned_rules
         lines = [
             f"Accent profile: {self.profile_path}",
@@ -181,7 +239,11 @@ class AccentLearner:
         return "\n".join(lines)
 
     def export_learned(self) -> list[dict[str, str | int | bool]]:
-        """Export all learned corrections as a list of dicts."""
+        """Export learned.
+        
+        Returns:
+            list[dict[str, str | int | bool]]: List of dict[str, str | int | bool].
+        """
         return [
             {
                 "raw": raw,
@@ -203,7 +265,15 @@ def get_learner(
     profile_path: Path = Path("app/ai/accent/profiles/default.json"),
     accent_family: AccentFamily = "auto",
 ) -> AccentLearner:
-    """Return (or lazily create) the module-level AccentLearner singleton."""
+    """Get or initialize the accent learner instance.
+    
+    Args:
+        profile_path (Path): The profile path.
+        accent_family (AccentFamily): The accent family.
+    
+    Returns:
+        AccentLearner: AccentLearner result.
+    """
     global _default_learner  # pylint: disable=global-statement
     if _default_learner is None:
         _default_learner = AccentLearner(

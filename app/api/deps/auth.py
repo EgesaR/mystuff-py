@@ -7,7 +7,14 @@ from app.models.user import User
 
 
 def get_token_from_cookie(request: Request) -> str:
-    """Extracts the access token from the HttpOnly cookie."""
+    """Retrieve token from cookie.
+    
+    Args:
+        request (Request): Incoming HTTP request.
+    
+    Returns:
+        str: Processed string result.
+    """
     token = request.cookies.get("access_token")
     if not token:
         raise HTTPException(
@@ -21,8 +28,14 @@ def get_current_user(
     token: str = Depends(get_token_from_cookie),
     db: Session = Depends(get_db),
 ) -> User:
-    """
-    Decode and validate the token from the cookie to retrieve the user.
+    """Retrieve current user.
+    
+    Args:
+        token (str): Token string.
+        db (Session): Database session.
+    
+    Returns:
+        User: User data.
     """
     payload = decode_access_token(token)
 
@@ -46,7 +59,14 @@ def get_current_user(
 def require_active_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    """Verify that the authenticated user profile is marked active."""
+    """Require active user.
+    
+    Args:
+        current_user (User): Authenticated user performing the action.
+    
+    Returns:
+        User: User data.
+    """
     if not current_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

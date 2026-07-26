@@ -15,14 +15,32 @@ class LogRepository(BaseRepository[SystemLog]):
 
     @classmethod
     def get_by_level(cls, db: Session, level: LogLevel) -> list[SystemLog]:
-        """Retrieve all logs of a specific severity level."""
+        """Retrieve by level.
+        
+        Args:
+            db (Session): Database session.
+            level (LogLevel): The level.
+        
+        Returns:
+            list[SystemLog]: List of SystemLog.
+        """
         return db.query(cls.model).filter(cls.model.level == level).all()
 
     @classmethod
     def get_user_logs(
         cls, db: Session, user_id: str, skip: int = 0, limit: int = 100
     ) -> list[SystemLog]:
-        """Retrieve paginated logs associated with a specific user."""
+        """Retrieve user logs.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+            skip (int): Skip integer.
+            limit (int): Limit integer.
+        
+        Returns:
+            list[SystemLog]: List of SystemLog.
+        """
         return (
             db.query(cls.model)
             .filter(cls.model.user_id == user_id)
@@ -41,11 +59,17 @@ class LogRepository(BaseRepository[SystemLog]):
         user_id: str | None = None,
         limit: int = 500,
     ) -> list[SystemLog]:
-        """Retrieve word-accuracy log entries (label="accuracy"), newest first.
-
-        Filters on `mode`/`accuracy_type` use SQLite/Postgres JSON operators
-        against `metadata_json`, so this stays a single query rather than
-        pulling everything and filtering in Python.
+        """Retrieve accuracy logs.
+        
+        Args:
+            db (Session): Database session.
+            mode (str | None): The mode.
+            accuracy_type (str | None): The accuracy type.
+            user_id (str | None): Unique identifier of the user.
+            limit (int): Limit integer.
+        
+        Returns:
+            list[SystemLog]: List of SystemLog.
         """
         query = db.query(cls.model).filter(cls.model.label == "accuracy")
         if mode:

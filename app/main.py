@@ -29,6 +29,7 @@ from app.api.routes.media import router as media_router
 from app.api.routes.notes import router as notes_router
 from app.api.routes.notifications import router as notifications_router
 from app.api.routes.users import router as users_router
+from app.api.routes.workspace import router as workspace_router
 from app.api.websocket.dictate import router as dictate_ws_router
 from app.api.websocket.lyrics import router as lyrics_ws_router
 from app.api.websocket.notifications import router as notifications_ws_router
@@ -124,6 +125,8 @@ app.include_router(
     tags=["Notifications"],
 )
 
+app.include_router(workspace_router, prefix="/api/tabs",
+                   tags=["Workspace Tabs"])
 
 # WebSockets
 app.include_router(dictate_ws_router)
@@ -141,6 +144,14 @@ class CorrectionRequest(BaseModel):
 async def accent_correct(
     body: CorrectionRequest,
 ) -> dict[str, Any]:
+    """Submit an accent correction request.
+    
+    Args:
+        body (CorrectionRequest): Request body payload.
+    
+    Returns:
+        dict[str, Any]: Response payload.
+    """
     return TranscriptionService.submit_correction(
         body.raw,
         body.corrected,
@@ -149,6 +160,11 @@ async def accent_correct(
 
 @app.get("/api/accent/profile", tags=["AI / Accent"])
 async def accent_profile() -> dict[str, Any]:
+    """Retrieve the current accent correction profile.
+    
+    Returns:
+        dict[str, Any]: Response payload.
+    """
     return TranscriptionService.get_profile()
 
 
@@ -156,11 +172,24 @@ async def accent_profile() -> dict[str, Any]:
 async def accent_forget(
     word: str,
 ) -> dict[str, Any]:
+    """Forget a learned accent correction for a word.
+    
+    Args:
+        word (str): Word to process.
+    
+    Returns:
+        dict[str, Any]: Response payload.
+    """
     return TranscriptionService.forget_correction(word)
 
 
 @app.get("/")
 async def root() -> dict[str, Any]:
+    """Return service health and metadata.
+    
+    Returns:
+        dict[str, Any]: Response payload.
+    """
     return {
         "message": f"{settings.APP_NAME} is running",
         "docs": "/docs",
@@ -173,6 +202,15 @@ async def user_exists_exception_handler(
     _request: Request,
     exc: UserAlreadyExistsError,
 ) -> JSONResponse:
+    """User exists exception handler.
+    
+    Args:
+        _request (Request): Request payload.
+        exc (UserAlreadyExistsError): The exc.
+    
+    Returns:
+        JSONResponse: JSONResponse payload.
+    """
     return JSONResponse(
         status_code=400,
         content={

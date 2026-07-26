@@ -17,7 +17,15 @@ class FolderRepository(BaseRepository[Folder]):
         db: Session,
         user_id: str,
     ) -> list[Folder]:
-        """Retrieve all folders belonging to a specified user account."""
+        """Retrieve user folders.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            list[Folder]: List of Folder.
+        """
         return (
             db.query(cls.model)
             .filter(cls.model.owner_id == user_id)
@@ -30,7 +38,15 @@ class FolderRepository(BaseRepository[Folder]):
         db: Session,
         user_id: str,
     ) -> list[Folder]:
-        """Retrieve all top-level (root) folders for a specific user."""
+        """Retrieve root folders.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            list[Folder]: List of Folder.
+        """
         return (
             db.query(cls.model)
             .filter(
@@ -47,7 +63,16 @@ class FolderRepository(BaseRepository[Folder]):
         user_id: str,
         parent_id: str | None = None,
     ) -> list[Folder]:
-        """List folders filtered by user ownership and parent ID state."""
+        """Retrieve folders.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+            parent_id (str | None): Unique identifier of the target resource.
+        
+        Returns:
+            list[Folder]: List of Folder.
+        """
         if parent_id is None:
             return cls.get_root_folders(db, user_id)
         return (
@@ -65,7 +90,15 @@ class FolderRepository(BaseRepository[Folder]):
         db: Session,
         parent_id: str,
     ) -> list[Folder]:
-        """Fetch all subfolders tied directly to a parent folder ID."""
+        """Retrieve by parent.
+        
+        Args:
+            db (Session): Database session.
+            parent_id (str): Unique identifier of the target resource.
+        
+        Returns:
+            list[Folder]: List of Folder.
+        """
         return (
             db.query(cls.model)
             .filter(cls.model.parent_id == parent_id)
@@ -79,7 +112,16 @@ class FolderRepository(BaseRepository[Folder]):
         folder_id: str,
         user_id: str,
     ) -> Folder | None:
-        """Retrieve a specific folder validating identity ownership."""
+        """Retrieve user folder.
+        
+        Args:
+            db (Session): Database session.
+            folder_id (str): Unique identifier of the folder.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            Folder | None: Folder or None.
+        """
         return (
             db.query(cls.model)
             .filter(
@@ -96,7 +138,16 @@ class FolderRepository(BaseRepository[Folder]):
         folder_id: str,
         user_id: str,
     ) -> bool:
-        """Check existence of a folder constrained by owner identity."""
+        """Folder exists.
+        
+        Args:
+            db (Session): Database session.
+            folder_id (str): Unique identifier of the folder.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         return (
             db.query(cls.model)
             .filter(
@@ -115,15 +166,22 @@ class FolderRepository(BaseRepository[Folder]):
         user_id: str,
         parent_id: str | None = None,
     ) -> Folder | None:
-        """Locate a folder by name matching specified depth profiles."""
+        """Retrieve folder by name.
+        
+        Args:
+            db (Session): Database session.
+            name (str): Name string.
+            user_id (str): Unique identifier of the user.
+            parent_id (str | None): Unique identifier of the target resource.
+        
+        Returns:
+            Folder | None: Folder or None.
+        """
         query = db.query(cls.model).filter(
             cls.model.name == name,
             cls.model.owner_id == user_id,
         )
 
-        if parent_id is None:
-            query = query.filter(cls.model.parent_id.is_(None))
-        else:
-            query = query.filter(cls.model.parent_id == parent_id)
+        query = query.filter(cls.model.parent_id.is_(None)) if parent_id is None else query.filter(cls.model.parent_id == parent_id)
 
         return query.first()

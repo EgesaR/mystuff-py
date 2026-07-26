@@ -15,7 +15,16 @@ class NoteRepository(BaseRepository[Note]):
     def get_user_notes(
         cls, db: Session, user_id: str, folder_id: str | None = None
     ) -> list[Note]:
-        """Retrieve notes for a user, optionally filtered by folder."""
+        """Retrieve user notes.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+            folder_id (str | None): Unique identifier of the folder.
+        
+        Returns:
+            list[Note]: List of Note.
+        """
         query = db.query(cls.model).filter(cls.model.owner_id == user_id)
 
         if folder_id:
@@ -26,7 +35,15 @@ class NoteRepository(BaseRepository[Note]):
 
     @classmethod
     def get_pinned_notes(cls, db: Session, user_id: str) -> list[Note]:
-        """Retrieve pinned notes for a user."""
+        """Retrieve pinned notes.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            list[Note]: List of Note.
+        """
         return (
             db.query(cls.model)
             .filter(cls.model.owner_id == user_id, cls.model.pinned.is_(True))
@@ -36,7 +53,16 @@ class NoteRepository(BaseRepository[Note]):
 
     @classmethod
     def search_notes(cls, db: Session, user_id: str, query: str) -> list[Note]:
-        """Search notes by title for a specific user."""
+        """Search notes.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+            query (str): Query string.
+        
+        Returns:
+            list[Note]: List of Note.
+        """
         search_term = f"%{query}%"
         return (
             db.query(cls.model)

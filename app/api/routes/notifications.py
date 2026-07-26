@@ -30,6 +30,19 @@ def list_notifications(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[NotificationResponse]:
+    """List notifications for a user.
+    
+    Args:
+        unread_only (bool): Unread only flag.
+        archived (bool): Archived flag.
+        limit (int): Limit integer.
+        skip (int): Skip integer.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        list[NotificationResponse]: List of NotificationResponse.
+    """
     return NotificationService.list_notifications(
         db,
         user_id=current_user.id,
@@ -46,7 +59,15 @@ def unread_count(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> UnreadCountResponse:
-    """Return the current user's unread notification count."""
+    """Count unread notifications for a user.
+    
+    Args:
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        UnreadCountResponse: UnreadCountResponse payload.
+    """
     count = NotificationService.unread_count(db, current_user.id)
     return UnreadCountResponse(count=count)
 
@@ -56,6 +77,16 @@ def mark_read(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> NotificationResponse:
+    """Mark a notification as read.
+    
+    Args:
+        notification_id (str): Unique identifier of the notification.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        NotificationResponse: NotificationResponse payload.
+    """
     try:
         return NotificationService.mark_read(db, notification_id, current_user.id)
     except NotFoundError as exc:
@@ -71,6 +102,15 @@ def mark_all_read(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> dict[str, int]:
+    """Mark all notifications as read.
+    
+    Args:
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        dict[str, int]: Response payload.
+    """
     return {"updated": NotificationService.mark_all_read(db, current_user.id)}
 
 
@@ -80,6 +120,16 @@ def archive_notification(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> NotificationResponse:
+    """Archive a notification.
+    
+    Args:
+        notification_id (str): Unique identifier of the notification.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        NotificationResponse: NotificationResponse payload.
+    """
     try:
         return NotificationService.set_archived(
             db, notification_id, current_user.id, archived=True
@@ -98,6 +148,16 @@ def unarchive_notification(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> NotificationResponse:
+    """Unarchive a notification.
+    
+    Args:
+        notification_id (str): Unique identifier of the notification.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        NotificationResponse: NotificationResponse payload.
+    """
     try:
         return NotificationService.set_archived(
             db, notification_id, current_user.id, archived=False
@@ -116,6 +176,16 @@ def bulk_notification_action(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> dict[str, int]:
+    """Apply a bulk action to notifications.
+    
+    Args:
+        payload (BulkNotificationAction): Request payload.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        dict[str, int]: Response payload.
+    """
     updated = NotificationService.bulk_action(
         db, ids=payload.ids, user_id=current_user.id, action=payload.action
     )
@@ -128,6 +198,16 @@ def delete_notification(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
+    """Delete a notification.
+    
+    Args:
+        notification_id (str): Unique identifier of the notification.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        None: None result.
+    """
     try:
         NotificationService.delete(db, notification_id, current_user.id)
     except NotFoundError as exc:

@@ -39,11 +39,24 @@ class AccuracyResult:
     word_accuracy: float
 
     def as_dict(self) -> dict[str, float | int]:
-        """Convert the accuracy result into a dictionary structure."""
+        """As dict.
+        
+        Returns:
+            dict[str, float | int]: Response payload.
+        """
         return asdict(self)
 
 
 def _tokenize(text: str, case_sensitive: bool) -> list[str]:
+    """Tokenize.
+    
+    Args:
+        text (str): Text to process.
+        case_sensitive (bool): Case sensitive flag.
+    
+    Returns:
+        list[str]: List of strings.
+    """
     words = _WORD_RE.findall(text or "")
     return words if case_sensitive else [w.lower() for w in words]
 
@@ -53,11 +66,15 @@ def word_accuracy(
     hypothesis: str,
     case_sensitive: bool = False,
 ) -> AccuracyResult:
-    """Compute WER-style accuracy of `hypothesis` against `reference`.
-
-    Uses a single-pass, O(n*m) Levenshtein alignment at the word level with
-    O(min(n, m)) memory (rolling two-row DP) rather than a full n*m matrix,
-    which matters for long lyric transcripts / long dictation sessions.
+    """Word accuracy.
+    
+    Args:
+        reference (str): Reference string.
+        hypothesis (str): Hypothesis string.
+        case_sensitive (bool): Case sensitive flag.
+    
+    Returns:
+        AccuracyResult: AccuracyResult result.
     """
     ref = _tokenize(reference, case_sensitive)
     hyp = _tokenize(hypothesis, case_sensitive)

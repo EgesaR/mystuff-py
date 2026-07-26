@@ -16,17 +16,43 @@ class NoteService:
     def list_notes(
         db: Session, user_id: str, folder_id: str | None = None
     ) -> list[Note]:
-        """List notes for a user, optionally filtering by folder structure."""
+        """List notes for the current user.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+            folder_id (str | None): Unique identifier of the folder.
+        
+        Returns:
+            list[Note]: List of Note.
+        """
         return NoteRepository.get_user_notes(db, user_id, folder_id)
 
     @staticmethod
     def list_pinned(db: Session, user_id: str) -> list[Note]:
-        """List all pinned notes for a specific user identity."""
+        """List pinned.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            list[Note]: List of Note.
+        """
         return NoteRepository.get_pinned_notes(db, user_id)
 
     @staticmethod
     def search_notes(db: Session, user_id: str, query: str) -> list[Note]:
-        """Execute text query search across a user's notes collection."""
+        """Search notes.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+            query (str): Query string.
+        
+        Returns:
+            list[Note]: List of Note.
+        """
         return NoteRepository.search_notes(db, user_id, query)
 
     @staticmethod
@@ -38,7 +64,19 @@ class NoteService:
         folder_id: str | None,
         color: str | None,
     ) -> Note:
-        """Create and persist a new note record."""
+        """Create a new note.
+        
+        Args:
+            db (Session): Database session.
+            owner_id (str): Unique identifier of the target resource.
+            title (str): Title string.
+            content (dict[str, Any] | None): The content.
+            folder_id (str | None): Unique identifier of the folder.
+            color (str | None): The color.
+        
+        Returns:
+            Note: Note result.
+        """
         note_data = {
             "owner_id": owner_id,
             "title": title,
@@ -51,7 +89,16 @@ class NoteService:
 
     @staticmethod
     def get_note(db: Session, note_id: str, user_id: str) -> Note:
-        """Fetch a specific note and explicitly verify owner permissions."""
+        """Retrieve a specific note.
+        
+        Args:
+            db (Session): Database session.
+            note_id (str): Unique identifier of the note.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            Note: Note result.
+        """
         note = NoteRepository.get(db, note_id)
         if not note:
             raise NotFoundError("Note not found")
@@ -63,7 +110,17 @@ class NoteService:
     def update_note(
         db: Session, note_id: str, user_id: str, data: dict[str, Any]
     ) -> Note:
-        """Modify fields on an existing note record."""
+        """Update an existing note.
+        
+        Args:
+            db (Session): Database session.
+            note_id (str): Unique identifier of the note.
+            user_id (str): Unique identifier of the user.
+            data (dict[str, Any]): The data.
+        
+        Returns:
+            Note: Note result.
+        """
         note = NoteService.get_note(db, note_id, user_id)
         return NoteRepository.update(db, db_obj=note, update_data=data)
 
@@ -71,7 +128,17 @@ class NoteService:
     def set_pinned(
         db: Session, note_id: str, user_id: str, pinned: bool
     ) -> Note:
-        """Toggle the pinning state of an authorized note."""
+        """Set pinned.
+        
+        Args:
+            db (Session): Database session.
+            note_id (str): Unique identifier of the note.
+            user_id (str): Unique identifier of the user.
+            pinned (bool): Pinned flag.
+        
+        Returns:
+            Note: Note result.
+        """
         note = NoteService.get_note(db, note_id, user_id)
         return NoteRepository.update(
             db, db_obj=note, update_data={"pinned": pinned}
@@ -81,7 +148,17 @@ class NoteService:
     def move_note(
         db: Session, note_id: str, user_id: str, folder_id: str | None
     ) -> Note:
-        """Relocate an authorized note to a different folder target."""
+        """Move a note to a different folder.
+        
+        Args:
+            db (Session): Database session.
+            note_id (str): Unique identifier of the note.
+            user_id (str): Unique identifier of the user.
+            folder_id (str | None): Unique identifier of the folder.
+        
+        Returns:
+            Note: Note result.
+        """
         note = NoteService.get_note(db, note_id, user_id)
         return NoteRepository.update(
             db, db_obj=note, update_data={"folder_id": folder_id}
@@ -89,7 +166,16 @@ class NoteService:
 
     @staticmethod
     def delete_note(db: Session, note_id: str, user_id: str) -> None:
-        """Permanently remove an authorized note record."""
+        """Delete a note.
+        
+        Args:
+            db (Session): Database session.
+            note_id (str): Unique identifier of the note.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            None: None result.
+        """
         note = NoteService.get_note(db, note_id, user_id)
         # Fixed: Pass the fetched model instance as db_obj
         NoteRepository.delete(db, db_obj=note)

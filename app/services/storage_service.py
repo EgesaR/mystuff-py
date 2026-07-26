@@ -25,14 +25,28 @@ class StorageService:
 
     @staticmethod
     def _get_folder(mime: str) -> str:
-        """Determine the root storage folder based on MIME type."""
+        """Retrieve folder.
+        
+        Args:
+            mime (str): Mime string.
+        
+        Returns:
+            str: Processed string result.
+        """
         if not mime:
             return "files"
         return StorageService.MIME_MAP.get(mime.split("/")[0], "files")
 
     @staticmethod
     def _infer_media_type(mime: str) -> MediaType:
-        """Convert a MIME type string to a standard MediaType enum."""
+        """Infer media type.
+        
+        Args:
+            mime (str): Mime string.
+        
+        Returns:
+            MediaType: MediaType result.
+        """
         if mime.startswith("image/"):
             return MediaType.IMAGE
         if mime.startswith("video/"):
@@ -49,7 +63,16 @@ class StorageService:
         owner_id: str,
         sub_folder: str | None = None,
     ) -> UploadResult:
-        """Validate and upload a file to the configured storage provider."""
+        """Upload file.
+        
+        Args:
+            file (UploadFile): The file.
+            owner_id (str): Unique identifier of the target resource.
+            sub_folder (str | None): The sub folder.
+        
+        Returns:
+            UploadResult: UploadResult result.
+        """
 
         filename = file.filename or "file"
 
@@ -123,7 +146,14 @@ class StorageService:
     async def delete_file(
         path_or_url: str,
     ) -> bool:
-        """Remove a file from storage."""
+        """Delete file.
+        
+        Args:
+            path_or_url (str): Path or url string.
+        
+        Returns:
+            bool: True if successful, False otherwise.
+        """
 
         try:
             storage = get_storage_provider()

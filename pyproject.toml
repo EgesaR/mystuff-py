@@ -46,6 +46,7 @@ dev = [
     "autopep8==2.3.2",
     "taskipy==1.14.1",
     "boto3-stubs[s3]>=1.43.52",
+    "pylint>=4.0.6",
 ]
 
 ai = [
@@ -72,7 +73,7 @@ torchvision = [{ index = "pytorch-cpu" }]
 
 # --- Tool Settings ---
 [tool.ruff]
-line-length = 88
+line-length = 200
 target-version = "py313"
 
 [tool.ruff.lint]
@@ -81,6 +82,16 @@ ignore = ["B008"]
 
 [tool.ruff.format]
 quote-style = "double"
+
+[tool.pylint."messages_control"]
+disable = [
+    # Docstring checks
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    # Similar lines / boilerplate checks (common in SQLAlchemy models/repos)
+    "duplicate-code",
+]
 
 [tool.pyright]
 typeCheckingMode = "strict"
@@ -94,6 +105,9 @@ fuser -k 8000/tcp 8001/tcp 8002/tcp 8003/tcp 8004/tcp 8005/tcp || true && \
 clear && \
 uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 """
+mm = "uv run alembic revision --autogenerate -m"
+migrate = "uv run alembic upgrade head"
+push = "bash scripts/db-push.sh"
 
 [tool.pylint.design]
 min-public-methods = 0

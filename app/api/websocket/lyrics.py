@@ -16,10 +16,19 @@ class LyricsRecognizerState:
     """Holds the lazy-loaded lyrics recognizer instance."""
 
     def __init__(self) -> None:
+        """Init.
+        
+        Returns:
+            None: None result.
+        """
         self._instance = None
 
     def get(self):
-        """Return the lazily-loaded lyrics recognizer instance."""
+        """Retrieve.
+        
+        Returns:
+            Any: Result value.
+        """
         if self._instance is None:
             self._instance = TranscriptionService.build_lyrics_recogniser()
         return self._instance
@@ -31,7 +40,14 @@ state = LyricsRecognizerState()
 
 @router.websocket("/ws/lyrics")
 async def ws_lyrics(websocket: WebSocket) -> None:
-    """Musical / lyrics transcription WebSocket handler."""
+    """Ws lyrics.
+    
+    Args:
+        websocket (WebSocket): The websocket.
+    
+    Returns:
+        None: None result.
+    """
     recogniser = state.get()
     await websocket.accept()
     stream = recogniser.create_stream()

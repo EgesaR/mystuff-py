@@ -14,7 +14,14 @@ _STRUCTURE_TAGS = (
 
 
 def clean_lyric_line(text: str) -> str:
-    """Lightweight single-line cleanup for live interim display."""
+    """Clean lyric line.
+    
+    Args:
+        text (str): Text to process.
+    
+    Returns:
+        str: Processed string result.
+    """
     if not text:
         return ""
     # Collapse repeated characters (melisma / held notes)
@@ -26,6 +33,14 @@ def clean_lyric_line(text: str) -> str:
 
 
 def _structure_tag(lower_line: str) -> str | None:
+    """Structure tag.
+    
+    Args:
+        lower_line (str): Lower line string.
+    
+    Returns:
+        str | None: Processed string or None.
+    """
     for prefixes, tag in _STRUCTURE_TAGS:
         if lower_line.startswith(prefixes):
             return tag
@@ -33,7 +48,15 @@ def _structure_tag(lower_line: str) -> str | None:
 
 
 def process_lyrics(text: str, structure: bool = True) -> str:
-    """Final lyrics pipeline: melisma cleanup + optional structural blocks."""
+    """Process lyrics.
+    
+    Args:
+        text (str): Text to process.
+        structure (bool): Structure flag.
+    
+    Returns:
+        str: Processed string result.
+    """
     if not text:
         return ""
     lines = [clean_lyric_line(line) for line in text.splitlines()]

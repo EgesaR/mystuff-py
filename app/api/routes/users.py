@@ -15,8 +15,6 @@ from app.services.user_service import UserService
 logger = logging.getLogger("app")
 router = APIRouter()
 
-# ... [get_profile stays the same] ...
-
 
 @router.patch("/me", response_model=UserResponse, summary="Update current user profile")
 def update_profile(
@@ -24,7 +22,16 @@ def update_profile(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> User:
-    """Update current user profile."""
+    """Update profile.
+    
+    Args:
+        payload (UserUpdate): Request payload.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        User: User data.
+    """
     return UserService.update_profile(
         db,
         user=current_user,
@@ -37,7 +44,15 @@ def delete_account(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
-    """Delete current user account."""
+    """Delete account.
+    
+    Args:
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        None: None result.
+    """
     UserService.delete_account(db, user=current_user)
 
 
@@ -46,7 +61,15 @@ def get_user(
     user_id: str,
     db: Session = Depends(get_db),
 ) -> User:
-    """Get a user's public profile by ID."""
+    """Retrieve user.
+    
+    Args:
+        user_id (str): Unique identifier of the user.
+        db (Session): Database session.
+    
+    Returns:
+        User: User data.
+    """
     try:
         return UserService.get_by_id(db, user_id=user_id)
     except NotFoundError as exc:

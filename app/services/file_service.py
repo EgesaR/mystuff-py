@@ -15,6 +15,16 @@ class FileService:
     def list_files(
         db: Session, user_id: str, folder_id: str | None = None
     ) -> list[Any]:
+        """List files.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+            folder_id (str | None): Unique identifier of the folder.
+        
+        Returns:
+            list[Any]: List of Any.
+        """
         return FileRepository.get_files(db, user_id=user_id, folder_id=folder_id)
 
     @staticmethod
@@ -26,6 +36,18 @@ class FileService:
         display_name: str | None = None,
     ) -> Any:
 
+        """Upload file.
+        
+        Args:
+            db (Session): Database session.
+            upload (UploadFile): The upload.
+            owner (User): The owner.
+            folder_id (str | None): Unique identifier of the folder.
+            display_name (str | None): The display name.
+        
+        Returns:
+            Any: Result value.
+        """
         stored = await StorageService.upload_file(
             file=upload, owner_id=owner.id
         )
@@ -47,6 +69,16 @@ class FileService:
 
     @staticmethod
     def get_file(db: Session, file_id: str, user_id: str) -> Any:
+        """Retrieve file.
+        
+        Args:
+            db (Session): Database session.
+            file_id (str): Unique identifier of the file.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            Any: Result value.
+        """
         file = FileRepository.get_user_file(
             db, file_id=file_id, user_id=user_id)
         if not file:
@@ -57,6 +89,17 @@ class FileService:
     def move_file(
         db: Session, file_id: str, user_id: str, folder_id: str | None
     ) -> Any:
+        """Move file.
+        
+        Args:
+            db (Session): Database session.
+            file_id (str): Unique identifier of the file.
+            user_id (str): Unique identifier of the user.
+            folder_id (str | None): Unique identifier of the folder.
+        
+        Returns:
+            Any: Result value.
+        """
         file = FileService.get_file(db, file_id=file_id, user_id=user_id)
         return FileRepository.update(
             db, db_obj=file, update_data={"folder_id": folder_id}
@@ -64,7 +107,16 @@ class FileService:
 
     @staticmethod
     async def delete_file(db: Session, file_id: str, user_id: str) -> None:
-        """Now async because cloud deletion requires a network request."""
+        """Delete file.
+        
+        Args:
+            db (Session): Database session.
+            file_id (str): Unique identifier of the file.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            None: None result.
+        """
         file = FileService.get_file(db, file_id=file_id, user_id=user_id)
 
         # Pass the url (or file_path) based on how you implemented storage.delete()

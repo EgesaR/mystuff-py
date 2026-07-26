@@ -1,15 +1,15 @@
-"""expand_notification_types
+"""creation of tables
 
-Revision ID: 9ac9d0a88b4f
-Revises: 6fcfec8263f6
-Create Date: 2026-07-15 19:06:55.605257
+Revision ID: 7f1a6f6e5b41
+Revises: 193d2f5ccab2
+Create Date: 2026-07-26 19:15:39.686378
 
 """
 from collections.abc import Sequence
 
 # revision identifiers, used by Alembic.
-revision: str = '9ac9d0a88b4f'
-down_revision: str | Sequence[str] | None = '6fcfec8263f6'
+revision: str = '7f1a6f6e5b41'
+down_revision: str | Sequence[str] | None = '193d2f5ccab2'
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

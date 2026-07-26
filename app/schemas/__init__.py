@@ -7,6 +7,12 @@ from app.schemas.auth import (
     ResetPasswordRequest,
     SignupRequest,
 )
+from app.schemas.collection import (
+    CollectionCreate,
+    CollectionFileAdd,
+    CollectionResponse,
+    CollectionUpdate,
+)
 from app.schemas.file import FileResponse, FileUploadResponse
 from app.schemas.folder import FolderCreate, FolderResponse, FolderUpdate
 from app.schemas.media import (
@@ -17,7 +23,6 @@ from app.schemas.media import (
 from app.schemas.note import NoteCreate, NoteResponse, NoteUpdate
 from app.schemas.token import RefreshRequest, TokenPair
 from app.schemas.user import UserResponse, UserUpdate
-from app.schemas.collection import CollectionCreate, CollectionUpdate, CollectionResponse, CollectionFileAdd
 
 __all__ = [
     "SignupRequest",

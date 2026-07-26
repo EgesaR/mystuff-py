@@ -34,6 +34,11 @@ class PasswordResetTokenStub:
     """Transient structure to hold tracking variables during tests."""
 
     def __init__(self, code: str):
+        """Init.
+        
+        Args:
+            code (str): Verification or reset code.
+        """
         self.code = code
 
 
@@ -48,7 +53,18 @@ class AuthService:
         password: str,
         full_name: str | None = None,
     ) -> User:
-        """Validate signatures and commit new profiles to the database."""
+        """Register a new user account.
+        
+        Args:
+            db (Session): Database session.
+            email (str): Email address.
+            username (str): Username.
+            password (str): Password string.
+            full_name (str | None): User full name.
+        
+        Returns:
+            User: User data.
+        """
         email = email.strip().lower()
 
         existing = UserRepository.get_by_email(db, email)
@@ -73,12 +89,21 @@ class AuthService:
         email: str,
         password: str,
     ) -> User:
-        """Validate input records against database crypt hashes."""
+        """Authenticate.
+        
+        Args:
+            db (Session): Database session.
+            email (str): Email address.
+            password (str): Password string.
+        
+        Returns:
+            User: User data.
+        """
         email = email.strip().lower()
 
         user = UserRepository.get_by_email(db, email)
         if user is None:
-            raise AuthenticationError("Invalid credentials")
+            raise AuthenticationError("User doesn't exist")
 
         if not verify_password(password, user.hashed_password):
             raise AuthenticationError("Invalid credentials")
@@ -90,7 +115,15 @@ class AuthService:
         db: Session,
         user: User,
     ) -> TokenPair:
-        """Build and write new stateful crypt sessions across tables."""
+        """Create token pair.
+        
+        Args:
+            db (Session): Database session.
+            user (User): User model instance or payload.
+        
+        Returns:
+            TokenPair: TokenPair result.
+        """
         access_token = create_access_token(user.id)
         refresh_token = create_refresh_token(user.id)
 
@@ -114,7 +147,15 @@ class AuthService:
         db: Session,
         refresh_token: str,
     ) -> TokenPair:
-        """Assert refresh validation lifetimes and rotate sessions."""
+        """Refresh tokens.
+        
+        Args:
+            db (Session): Database session.
+            refresh_token (str): Refresh token string.
+        
+        Returns:
+            TokenPair: TokenPair result.
+        """
         payload = decode_refresh_token(refresh_token)
         if payload is None:
             raise AuthenticationError("Invalid refresh token")
@@ -133,7 +174,15 @@ class AuthService:
         db: Session,
         refresh_token: str,
     ) -> None:
-        """Safely drop state bounds on singular hardware tracks."""
+        """Revoke the current refresh token and clear cookies.
+        
+        Args:
+            db (Session): Database session.
+            refresh_token (str): Refresh token string.
+        
+        Returns:
+            None: None result.
+        """
         token_record = RefreshTokenRepository.get_valid_token(
             db, refresh_token
         )
@@ -145,12 +194,28 @@ class AuthService:
         db: Session,
         user_id: str,
     ) -> int:
-        """Drop all user authorization sessions stored in database."""
+        """Logout all devices.
+        
+        Args:
+            db (Session): Database session.
+            user_id (str): Unique identifier of the user.
+        
+        Returns:
+            int: int result.
+        """
         return RefreshTokenRepository.revoke_all_user_tokens(db, user_id)
 
     @staticmethod
     def request_password_reset(db: Session, email: str) -> Any:
-        """Verify targets and build a reset code tracking model."""
+        """Request password reset.
+        
+        Args:
+            db (Session): Database session.
+            email (str): Email address.
+        
+        Returns:
+            Any: Result value.
+        """
         email = email.strip().lower()
         user = UserRepository.get_by_email(db, email)
         if not user:
@@ -164,7 +229,17 @@ class AuthService:
     def reset_password(
         db: Session, email: str, code: str, new_password: str
     ) -> None:
-        """Assert constraints and update password state blocks."""
+        """Reset a user password using a recovery code.
+        
+        Args:
+            db (Session): Database session.
+            email (str): Email address.
+            code (str): Verification or reset code.
+            new_password (str): New password string.
+        
+        Returns:
+            None: None result.
+        """
         email = email.strip().lower()
         user = UserRepository.get_by_email(db, email)
         if not user:
@@ -184,7 +259,17 @@ class AuthService:
     def change_password(
         db: Session, user: User, current_password: str, new_password: str
     ) -> None:
-        """Verify current metrics and commit password updates."""
+        """Change the current user password.
+        
+        Args:
+            db (Session): Database session.
+            user (User): User model instance or payload.
+            current_password (str): Current password string.
+            new_password (str): New password string.
+        
+        Returns:
+            None: None result.
+        """
         if not verify_password(current_password, user.hashed_password):
             raise AuthenticationError("Current password mismatched.")
 

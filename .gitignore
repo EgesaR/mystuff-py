@@ -21,3 +21,6 @@ __pycache__/
 data/
 app/ai/models/*
 !app/ai/models/.gitkeep
+
+# RUFF cache
+.ruff_cache

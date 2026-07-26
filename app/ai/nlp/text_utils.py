@@ -62,6 +62,14 @@ _PUNCT_SPACE_RE = re.compile(r"\s+([.,!?;:])")
 
 
 def _apply_custom_mappings(text: str) -> str:
+    """Apply custom mappings.
+    
+    Args:
+        text (str): Text to process.
+    
+    Returns:
+        str: Processed string result.
+    """
     for pattern, replacement in _CUSTOM_MAPPINGS_COMPILED:
         text = pattern.sub(replacement, text)
     return text
@@ -70,6 +78,14 @@ def _apply_custom_mappings(text: str) -> str:
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
 def _heal_bpe_fragments(tokens: list[str]) -> list[str]:
+    """Heal bpe fragments.
+    
+    Args:
+        tokens (list[str]): Authentication tokens.
+    
+    Returns:
+        list[str]: List of strings.
+    """
     out: list[str] = []
     for tok in tokens:
         is_fragment = len(tok) <= 2 and tok.lower() not in REAL_SHORT_WORDS
@@ -81,18 +97,42 @@ def _heal_bpe_fragments(tokens: list[str]) -> list[str]:
 
 
 def _split_suffix(word: str) -> tuple[str, str]:
+    """Split suffix.
+    
+    Args:
+        word (str): Word to process.
+    
+    Returns:
+        tuple[str, str]: tuple[str, str] result.
+    """
     if word and word[-1] in ".,!?;:":
         return word[:-1], word[-1]
     return word, ""
 
 
 def _is_acronym(word: str) -> bool:
+    """Return whether acronym.
+    
+    Args:
+        word (str): Word to process.
+    
+    Returns:
+        bool: True if successful, False otherwise.
+    """
     return 2 <= len(word) <= 6 and word.isupper()
 
 
 # ── Speech pipeline ───────────────────────────────────────────────────────────
 
 def _process_speech(text: str) -> str:
+    """Process speech.
+    
+    Args:
+        text (str): Text to process.
+    
+    Returns:
+        str: Processed string result.
+    """
     text = _WHITESPACE_RE.sub(" ", text).strip()
 
     text = _apply_custom_mappings(text)
@@ -172,6 +212,14 @@ def _process_speech(text: str) -> str:
 # ── Lyrics pipeline ───────────────────────────────────────────────────────────
 
 def _process_lyrics_interim(text: str) -> str:
+    """Process lyrics interim.
+    
+    Args:
+        text (str): Text to process.
+    
+    Returns:
+        str: Processed string result.
+    """
     if not text:
         return ""
     text = _WHITESPACE_RE.sub(" ", text).strip()
@@ -184,6 +232,15 @@ def _process_lyrics_interim(text: str) -> str:
 
 
 def _process_lyrics_final(text: str, structured: bool = True) -> str:
+    """Process lyrics final.
+    
+    Args:
+        text (str): Text to process.
+        structured (bool): Structured flag.
+    
+    Returns:
+        str: Processed string result.
+    """
     if not text:
         return ""
     text = _WHITESPACE_RE.sub(" ", text).strip()
@@ -195,14 +252,31 @@ def _process_lyrics_final(text: str, structured: bool = True) -> str:
 # ── Public API ──────────────────────────────────────────────────────────────
 
 def fine_tune_text(text: str, mode: Mode = "speech") -> str:
-    """Post-process a raw ASR interim transcript."""
+    """Fine tune text.
+    
+    Args:
+        text (str): Text to process.
+        mode (Mode): The mode.
+    
+    Returns:
+        str: Processed string result.
+    """
     if mode == "lyrics":
         return _process_lyrics_interim(text)
     return _process_speech(text)
 
 
 def fine_tune_final(text: str, mode: Mode = "speech", structured: bool = True) -> str:
-    """Post-process a finalised utterance (endpoint detected)."""
+    """Fine tune final.
+    
+    Args:
+        text (str): Text to process.
+        mode (Mode): The mode.
+        structured (bool): Structured flag.
+    
+    Returns:
+        str: Processed string result.
+    """
     if mode == "lyrics":
         return _process_lyrics_final(text, structured=structured)
     return _process_speech(text)
@@ -213,13 +287,15 @@ def fine_tune_final_scored(
     mode: Mode = "speech",
     structured: bool = True,
 ) -> tuple[str, AccuracyResult]:
-    """Same as `fine_tune_final`, plus a raw-vs-processed accuracy score.
-
-    This is reference-free: it measures how much the pipeline had to change
-    relative to the raw ASR text, which is a useful proxy signal even before
-    any human correction exists. Callers that have a DB session should log
-    the returned `AccuracyResult` via `LogService.log_accuracy(...)` with
-    `AccuracyType.RAW_VS_PROCESSED`.
+    """Fine tune final scored.
+    
+    Args:
+        text (str): Text to process.
+        mode (Mode): The mode.
+        structured (bool): Structured flag.
+    
+    Returns:
+        tuple[str, AccuracyResult]: tuple[str, AccuracyResult] result.
     """
     processed = fine_tune_final(text, mode=mode, structured=structured)
     metrics = word_accuracy(reference=text, hypothesis=processed)
@@ -230,7 +306,15 @@ def fine_tune_text_scored(
     text: str,
     mode: Mode = "speech",
 ) -> tuple[str, AccuracyResult]:
-    """Interim-transcript counterpart of `fine_tune_final_scored`."""
+    """Fine tune text scored.
+    
+    Args:
+        text (str): Text to process.
+        mode (Mode): The mode.
+    
+    Returns:
+        tuple[str, AccuracyResult]: tuple[str, AccuracyResult] result.
+    """
     processed = fine_tune_text(text, mode=mode)
     metrics = word_accuracy(reference=text, hypothesis=processed)
     return processed, metrics

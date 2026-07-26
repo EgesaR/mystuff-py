@@ -41,8 +41,15 @@ def list_collections(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[CollectionResponse]:
-    """Retrieve every collection owned by the current user, each with a
-    live file_count."""
+    """List collections.
+    
+    Args:
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        list[CollectionResponse]: List of CollectionResponse.
+    """
     return CollectionService.list_collections(db, user_id=current_user.id)
 
 
@@ -57,7 +64,16 @@ def create_collection(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> CollectionResponse:
-    """Create a new, empty collection owned by the current user."""
+    """Create collection.
+    
+    Args:
+        payload (CollectionCreate): Request payload.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        CollectionResponse: CollectionResponse payload.
+    """
     collection = CollectionService.create_collection(
         db, user_id=current_user.id, name=payload.name, color=payload.color
     )
@@ -75,7 +91,17 @@ def update_collection(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> CollectionResponse:
-    """Partially update a collection's name and/or color."""
+    """Update collection.
+    
+    Args:
+        collection_id (str): Unique identifier of the collection.
+        payload (CollectionUpdate): Request payload.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        CollectionResponse: CollectionResponse payload.
+    """
     try:
         collection = CollectionService.update_collection(
             db,
@@ -100,8 +126,16 @@ def delete_collection(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
-    """Delete the collection itself. The files it grouped are untouched —
-    only the grouping goes away."""
+    """Delete collection.
+    
+    Args:
+        collection_id (str): Unique identifier of the collection.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        None: None result.
+    """
     try:
         CollectionService.delete_collection(
             db, collection_id=collection_id, user_id=current_user.id
@@ -122,8 +156,16 @@ def list_file_collections(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[CollectionResponse]:
-    """Used to pre-check the "Add to collection" picker with the
-    collections a file is already a member of."""
+    """List file collections.
+    
+    Args:
+        file_id (str): Unique identifier of the file.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        list[CollectionResponse]: List of CollectionResponse.
+    """
     collections = CollectionService.get_file_collections(
         db, file_id=file_id, user_id=current_user.id
     )
@@ -140,6 +182,16 @@ def list_collection_files(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[FileResponse]:
+    """List collection files.
+    
+    Args:
+        collection_id (str): Unique identifier of the collection.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        list[FileResponse]: List of FileResponse.
+    """
     try:
         return CollectionService.list_files(
             db, collection_id=collection_id, user_id=current_user.id
@@ -161,8 +213,17 @@ def add_file_to_collection(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
-    """Adding is idempotent: adding a file that's already in the
-    collection is a no-op, not an error."""
+    """Add file to collection.
+    
+    Args:
+        collection_id (str): Unique identifier of the collection.
+        payload (CollectionFileAdd): Request payload.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        None: None result.
+    """
     try:
         CollectionService.add_file(
             db,
@@ -187,8 +248,17 @@ def remove_file_from_collection(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
-    """Removes the file from this collection only — the file itself, and
-    its membership in any other collection, is untouched."""
+    """Remove file from collection.
+    
+    Args:
+        collection_id (str): Unique identifier of the collection.
+        file_id (str): Unique identifier of the file.
+        current_user (User): Authenticated user performing the action.
+        db (Session): Database session.
+    
+    Returns:
+        None: None result.
+    """
     try:
         CollectionService.remove_file(
             db,
