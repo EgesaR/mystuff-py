@@ -6,7 +6,7 @@ This router only handles HTTP contracts.
 """
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps.auth import require_active_user
@@ -44,12 +44,12 @@ def signup(
     db: Session = Depends(get_db),
 ):
     """Register a new user account.
-    
+
     Args:
         payload (SignupRequest): Request payload.
         response (Response): HTTP response object.
         db (Session): Database session.
-    
+
     Returns:
         Any: Result value.
     """
@@ -99,12 +99,12 @@ def login(
     db: Session = Depends(get_db),
 ):
     """Authenticate a user and issue authorization cookies.
-    
+
     Args:
         payload (LoginRequest): Request payload.
         response (Response): HTTP response object.
         db (Session): Database session.
-    
+
     Returns:
         Any: Result value.
     """
@@ -115,7 +115,7 @@ def login(
     except AuthenticationError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Invalid email or password") from exc
-        
+
     tokens = AuthService.create_token_pair(db, user)
 
     # Set cookies
@@ -150,11 +150,11 @@ def refresh(
     db: Session = Depends(get_db),
 ) -> TokenPair:
     """Refresh access and refresh tokens.
-    
+
     Args:
         payload (RefreshRequest): Request payload.
         db (Session): Database session.
-    
+
     Returns:
         TokenPair: TokenPair result.
     """
@@ -176,20 +176,21 @@ def refresh(
 )
 def logout(
     response: Response,
-    payload: RefreshRequest,
+    refresh_token: str | None = Cookie(None),
     db: Session = Depends(get_db),
 ) -> None:
     """Revoke the current refresh token and clear cookies.
-    
+
     Args:
         response (Response): HTTP response object.
         payload (RefreshRequest): Request payload.
         db (Session): Database session.
-    
+
     Returns:
         None: None result.
     """
-    AuthService.logout(db, payload.refresh_token)
+    if refresh_token:
+        AuthService.logout(db, refresh_token)
 
     response.delete_cookie("access_token")
     response.delete_cookie("refresh_token")
@@ -208,11 +209,11 @@ def logout_all(
     db: Session = Depends(get_db),
 ) -> None:
     """Revoke all refresh tokens for the current user.
-    
+
     Args:
         current_user (User): Authenticated user performing the action.
         db (Session): Database session.
-    
+
     Returns:
         None: None result.
     """
@@ -231,11 +232,11 @@ def forgot_password(
     db: Session = Depends(get_db),
 ) -> ForgotPasswordResponse:
     """Send a password reset code to the user email.
-    
+
     Args:
         payload (ForgotPasswordRequest): Request payload.
         db (Session): Database session.
-    
+
     Returns:
         ForgotPasswordResponse: ForgotPasswordResponse payload.
     """
@@ -261,11 +262,11 @@ def reset_password(
     db: Session = Depends(get_db),
 ) -> None:
     """Reset a user password using a recovery code.
-    
+
     Args:
         payload (ResetPasswordRequest): Request payload.
         db (Session): Database session.
-    
+
     Returns:
         None: None result.
     """
@@ -296,12 +297,12 @@ def change_password(
     db: Session = Depends(get_db),
 ) -> None:
     """Change the current user password.
-    
+
     Args:
         payload (ChangePasswordRequest): Request payload.
         current_user (User): Authenticated user performing the action.
         db (Session): Database session.
-    
+
     Returns:
         None: None result.
     """
@@ -330,10 +331,10 @@ def me(
     current_user: User = Depends(require_active_user),
 ) -> User:
     """Return the authenticated user profile.
-    
+
     Args:
         current_user (User): Authenticated user performing the action.
-    
+
     Returns:
         User: User data.
     """

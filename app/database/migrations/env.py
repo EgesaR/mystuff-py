@@ -1,55 +1,43 @@
 """Alembic environment configuration script."""
 
-# pylint: disable=no-member
+# pylint: disable=no-member, wrong-import-position
 
-import os
+# isort: off
+
 import sys
-
-# ── 1. ADD THIS FIRST ─────────────────────────────────────────────────────────
-# Inject the current working directory into Python's path BEFORE importing 'app'
-sys.path.insert(0, os.getcwd())
-
 from logging.config import fileConfig
+from pathlib import Path
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-# Loads all models into memory so Alembic sees them
-import app.models  # pyright: ignore # noqa: F401 # pylint: disable=unused-import
+# ── 1. MUST BE AT THE VERY TOP BEFORE ANY 'app' IMPORTS ──────────────
+# Use this file's own location rather than os.getcwd(), so it still works
+# no matter which directory `alembic` / `task mm` is invoked from.
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(PROJECT_ROOT))
+
 from app.core.config import settings
 from app.database.base import Base
 
-sys.path.append(os.getcwd())
+import app.models  # noqa: F401 # pylint: disable=unused-import # pyright: ignore[reportUnusedImport]
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+# isort: on
+
+# This is the Alembic Config object
 config = context.config
 
-# ── 2. DYNAMICALLY INJECT YOUR DATABASE URL ───────────────────────────────────
-# This prevents you from having to hardcode the URL in alembic.ini
+# ── 2. DYNAMICALLY INJECT YOUR DATABASE URL ─────────────────────────
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
 target_metadata = Base.metadata
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 
 
 def run_migrations_offline() -> None:
-    """Run migrations offline.
-    
-    Returns:
-        None: None result.
-    """
+    """Run migrations offline."""
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -63,11 +51,7 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations online.
-    
-    Returns:
-        None: None result.
-    """
+    """Run migrations online."""
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",

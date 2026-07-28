@@ -73,3 +73,22 @@ def require_active_user(
             detail="Inactive user",
         )
     return current_user
+
+
+def require_developer(
+    current_user: User = Depends(require_active_user),
+) -> User:
+    """Require the current user to have developer privileges.
+
+    Args:
+        current_user (User): Authenticated user performing the action.
+
+    Returns:
+        User: User result.
+    """
+    if not getattr(current_user, "is_developer", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Developer access required",
+        )
+    return current_user

@@ -111,3 +111,6 @@ push = "bash scripts/db-push.sh"
 
 [tool.pylint.design]
 min-public-methods = 0
+
+[tool.ruff.lint.per-file-ignores]
+"app/database/migrations/env.py" = ["E402", "I001"]

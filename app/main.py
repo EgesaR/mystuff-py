@@ -22,6 +22,7 @@ from starlette.requests import Request
 
 from app.api.routes.auth import router as auth_router
 from app.api.routes.collections import router as collection_router
+from app.api.routes.feedback import router as feedback_router
 from app.api.routes.files import router as files_router
 from app.api.routes.health import router as health_router
 from app.api.routes.logs import router as logs_router
@@ -31,6 +32,7 @@ from app.api.routes.notifications import router as notifications_router
 from app.api.routes.users import router as users_router
 from app.api.routes.workspace import router as workspace_router
 from app.api.websocket.dictate import router as dictate_ws_router
+from app.api.websocket.feedback import router as feedback_ws_router
 from app.api.websocket.lyrics import router as lyrics_ws_router
 from app.api.websocket.notifications import router as notifications_ws_router
 from app.api.websocket.telemetry import router as telemetry_ws_router
@@ -62,6 +64,7 @@ settings.UPLOAD_DIR.mkdir(
     exist_ok=True,
 )
 
+print("Settings DATABASE URL:", settings.DATABASE_URL)
 
 app.mount(
     "/uploads",
@@ -128,11 +131,15 @@ app.include_router(
 app.include_router(workspace_router, prefix="/api/tabs",
                    tags=["Workspace Tabs"])
 
+app.include_router(feedback_router, prefix="/api/feedback",
+                   tags=["Feedback"])
+
 # WebSockets
 app.include_router(dictate_ws_router)
 app.include_router(lyrics_ws_router)
 app.include_router(telemetry_ws_router)
 app.include_router(notifications_ws_router)
+app.include_router(feedback_ws_router)
 
 
 class CorrectionRequest(BaseModel):
@@ -145,10 +152,10 @@ async def accent_correct(
     body: CorrectionRequest,
 ) -> dict[str, Any]:
     """Submit an accent correction request.
-    
+
     Args:
         body (CorrectionRequest): Request body payload.
-    
+
     Returns:
         dict[str, Any]: Response payload.
     """
@@ -161,7 +168,7 @@ async def accent_correct(
 @app.get("/api/accent/profile", tags=["AI / Accent"])
 async def accent_profile() -> dict[str, Any]:
     """Retrieve the current accent correction profile.
-    
+
     Returns:
         dict[str, Any]: Response payload.
     """
@@ -173,10 +180,10 @@ async def accent_forget(
     word: str,
 ) -> dict[str, Any]:
     """Forget a learned accent correction for a word.
-    
+
     Args:
         word (str): Word to process.
-    
+
     Returns:
         dict[str, Any]: Response payload.
     """
@@ -186,7 +193,7 @@ async def accent_forget(
 @app.get("/")
 async def root() -> dict[str, Any]:
     """Return service health and metadata.
-    
+
     Returns:
         dict[str, Any]: Response payload.
     """
@@ -203,11 +210,11 @@ async def user_exists_exception_handler(
     exc: UserAlreadyExistsError,
 ) -> JSONResponse:
     """User exists exception handler.
-    
+
     Args:
         _request (Request): Request payload.
         exc (UserAlreadyExistsError): The exc.
-    
+
     Returns:
         JSONResponse: JSONResponse payload.
     """

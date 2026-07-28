@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, String, Text
+from sqlalchemy import Boolean, String, Text, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.models.note import Note
     from app.models.notification import Notification
     from app.models.system_log import SystemLog
+    from app.models.workspace import WorkspaceState
 
 
 class User(Base, UUIDMixin, TimestampMixin):
@@ -107,3 +108,11 @@ class User(Base, UUIDMixin, TimestampMixin):
     logs: Mapped[list["SystemLog"]] = relationship(
         back_populates="user",
     )
+
+    workspace_state: Mapped["WorkspaceState | None"] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+    is_developer: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=false())
