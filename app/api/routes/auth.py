@@ -5,6 +5,7 @@ All business logic lives in AuthService.
 This router only handles HTTP contracts.
 """
 import logging
+from typing import Literal, TypedDict
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
@@ -22,16 +23,97 @@ from app.schemas.auth import (
     ResetPasswordRequest,
     SignupRequest,
 )
-from app.schemas.token import RefreshRequest, TokenPair
 from app.schemas.user import UserResponse
 from app.services.auth_service import AuthService
+
+
+class CookieOptions(TypedDict, total=False):
+    """Options supported by Response.set_cookie()."""
+
+    max_age: int
+    expires: int | None
+    path: str
+    domain: str | None
+    secure: bool
+    httponly: bool
+    samesite: Literal["lax", "strict", "none"]
+
+
+class DeleteCookieOptions(TypedDict, total=False):
+    """Options supported by Response.delete_cookie()."""
+
+    path: str
+    domain: str | None
+    secure: bool
+    httponly: bool
+    samesite: Literal["lax", "strict", "none"]
+
 
 logger = logging.getLogger("app")
 
 router = APIRouter()
 
 
+def get_cookie_options() -> DeleteCookieOptions:
+    """Return common cookie options."""
+    return {
+        "httponly": True,
+        "secure": not settings.DEBUG,
+        "samesite": (
+            "none"
+            if settings.ENVIRONMENT == "production"
+            else "lax"
+        ),
+        "path": "/",
+    }
+
+
+def set_auth_cookies(
+    response: Response,
+    access_token: str,
+    refresh_token: str,
+) -> None:
+    """Set authentication cookies."""
+
+    access_options: CookieOptions = {
+        **get_cookie_options(),
+        "max_age": 60 * 60 * 24,
+    }
+
+    refresh_options: CookieOptions = {
+        **get_cookie_options(),
+        "max_age": 60 * 60 * 24 * 7,
+    }
+
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        **access_options,
+    )
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        **refresh_options,
+    )
+
+
+def clear_auth_cookies(response: Response) -> None:
+    """Clear authentication cookies."""
+    options = get_cookie_options()
+
+    response.delete_cookie(
+        "access_token",
+        **options,
+    )
+
+    response.delete_cookie(
+        "refresh_token",
+        **options,
+    )
+
 # ── Register ─────────────────────────────────────────────────────────────────
+
 
 @router.post(
     "/signup",
@@ -63,22 +145,11 @@ def signup(
         )
         tokens = AuthService.create_token_pair(db, user)
 
-        # Standardize: Set cookies exactly like in /login
-        response.set_cookie(
-            key="access_token",
-            value=tokens.access_token,
-            httponly=True,
-            secure=not settings.DEBUG,
-            samesite="lax",
-            max_age=3600
-        )
-        response.set_cookie(
-            key="refresh_token",
-            value=tokens.refresh_token,
-            httponly=True,
-            secure=not settings.DEBUG,
-            samesite="lax",
-            max_age=604800
+        # Set cookies
+        set_auth_cookies(
+            response,
+            tokens.access_token,
+            tokens.refresh_token,
         )
 
         return user
@@ -90,8 +161,6 @@ def signup(
 
 
 # ── Login ─────────────────────────────────────────────────────────────────────
-
-
 @router.post("/login", response_model=UserResponse)
 def login(
     payload: LoginRequest,
@@ -118,23 +187,12 @@ def login(
 
     tokens = AuthService.create_token_pair(db, user)
 
-    # Set cookies
-    response.set_cookie(
-        key="access_token",
-        value=tokens.access_token,
-        httponly=True,
-        secure=not settings.DEBUG,  # Must be True in production (HTTPS)
-        samesite="lax",             # Helps prevent CSRF
-        max_age=3600                # 1 hour
+    set_auth_cookies(
+        response,
+        tokens.access_token,
+        tokens.refresh_token,
     )
-    response.set_cookie(
-        key="refresh_token",
-        value=tokens.refresh_token,
-        httponly=True,
-        secure=not settings.DEBUG,
-        samesite="lax",
-        max_age=60 * 60 * 24 * 7    # 7 days
-    )
+
     return user
 
 
@@ -142,13 +200,13 @@ def login(
 
 @router.post(
     "/refresh",
-    response_model=TokenPair,
     summary="Rotate refresh token and get a new token pair",
 )
 def refresh(
-    payload: RefreshRequest,
+    response: Response,
+    refresh_token: str | None = Cookie(None),
     db: Session = Depends(get_db),
-) -> TokenPair:
+):
     """Refresh access and refresh tokens.
 
     Args:
@@ -158,13 +216,25 @@ def refresh(
     Returns:
         TokenPair: TokenPair result.
     """
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token missing")
+
     try:
-        return AuthService.refresh_tokens(db, payload.refresh_token)
+        tokens = AuthService.refresh_tokens(db, refresh_token)
     except AuthenticationError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(exc),
         ) from exc
+
+    set_auth_cookies(
+        response,
+        tokens.access_token,
+        tokens.refresh_token,
+    )
+
+    return {"message": "Tokens refreshed successfully"}
 
 
 # ── Logout ────────────────────────────────────────────────────────────────────
@@ -192,8 +262,7 @@ def logout(
     if refresh_token:
         AuthService.logout(db, refresh_token)
 
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
+    clear_auth_cookies(response)
 
     # Returning None satisfies status_code=204
     return None

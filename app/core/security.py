@@ -12,13 +12,15 @@ from app.schemas.token import (
     RefreshTokenPayload,
 )
 
+SHARE_TOKEN_TYPE = "share"
+
 
 def hash_password(password: str) -> str:
     """Hash a password for secure storage.
-    
+
     Args:
         password (str): Password string.
-    
+
     Returns:
         str: Processed string result.
     """
@@ -31,11 +33,11 @@ def hash_password(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its stored hash.
-    
+
     Args:
         plain_password (str): Plain password string.
         hashed_password (str): Hashed password string.
-    
+
     Returns:
         bool: True if successful, False otherwise.
     """
@@ -49,11 +51,11 @@ def create_access_token(
     expires_delta: timedelta | None = None,
 ) -> str:
     """Create a new access token.
-    
+
     Args:
         subject (str): Subject string.
         expires_delta (timedelta | None): The expires delta.
-    
+
     Returns:
         str: Processed string result.
     """
@@ -83,11 +85,11 @@ def create_refresh_token(
     expires_delta: timedelta | None = None,
 ) -> str:
     """Create a new refresh token.
-    
+
     Args:
         subject (str): Subject string.
         expires_delta (timedelta | None): The expires delta.
-    
+
     Returns:
         str: Processed string result.
     """
@@ -112,14 +114,39 @@ def create_refresh_token(
     )
 
 
+def create_share_token(
+    *,
+    owner_id: str,
+    resource_type: str,
+    resource_id: str,
+    permission: str,
+    target_user_id: str | None = None,
+    expires_delta: timedelta | None = None
+) -> str:
+    now = datetime.now(UTC)
+    payload: dict[str, Any] = {
+        "typ": SHARE_TOKEN_TYPE,
+        "sub": owner_id,
+        "res_type": resource_type,
+        "res_id": resource_id,
+        "per": permission,
+        "target": target_user_id,
+        "iat": now
+    }
+    if expires_delta is not None:
+        payload["exp"] = now + expires_delta
+
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
 def decode_token(
     token: str,
 ) -> dict[str, Any] | None:
     """Decode a JWT token payload.
-    
+
     Args:
         token (str): Token string.
-    
+
     Returns:
         dict[str, Any] | None: Response payload or None.
     """
@@ -138,10 +165,10 @@ def decode_access_token(
     token: str,
 ) -> AccessTokenPayload | None:
     """Decode an access token payload.
-    
+
     Args:
         token (str): Token string.
-    
+
     Returns:
         AccessTokenPayload | None: AccessTokenPayload or None.
     """
@@ -166,10 +193,10 @@ def decode_refresh_token(
     token: str,
 ) -> RefreshTokenPayload | None:
     """Decode a refresh token payload.
-    
+
     Args:
         token (str): Token string.
-    
+
     Returns:
         RefreshTokenPayload | None: RefreshTokenPayload or None.
     """
@@ -188,3 +215,10 @@ def decode_refresh_token(
     # pylint: disable=broad-exception-caught
     except Exception:
         return None
+
+
+def decode_share_token(token: str) -> dict[str, Any] | None:
+    payload = decode_token(token)
+    if payload is None or payload.get("typ") != SHARE_TOKEN_TYPE:
+        return None
+    return payload

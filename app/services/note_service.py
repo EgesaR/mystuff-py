@@ -1,6 +1,6 @@
 """Note service module managing business logic operations for notes."""
 
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy.orm import Session
 
@@ -17,12 +17,12 @@ class NoteService:
         db: Session, user_id: str, folder_id: str | None = None
     ) -> list[Note]:
         """List notes for the current user.
-        
+
         Args:
             db (Session): Database session.
             user_id (str): Unique identifier of the user.
             folder_id (str | None): Unique identifier of the folder.
-        
+
         Returns:
             list[Note]: List of Note.
         """
@@ -31,11 +31,11 @@ class NoteService:
     @staticmethod
     def list_pinned(db: Session, user_id: str) -> list[Note]:
         """List pinned.
-        
+
         Args:
             db (Session): Database session.
             user_id (str): Unique identifier of the user.
-        
+
         Returns:
             list[Note]: List of Note.
         """
@@ -44,12 +44,12 @@ class NoteService:
     @staticmethod
     def search_notes(db: Session, user_id: str, query: str) -> list[Note]:
         """Search notes.
-        
+
         Args:
             db (Session): Database session.
             user_id (str): Unique identifier of the user.
             query (str): Query string.
-        
+
         Returns:
             list[Note]: List of Note.
         """
@@ -65,7 +65,7 @@ class NoteService:
         color: str | None,
     ) -> Note:
         """Create a new note.
-        
+
         Args:
             db (Session): Database session.
             owner_id (str): Unique identifier of the target resource.
@@ -73,7 +73,7 @@ class NoteService:
             content (dict[str, Any] | None): The content.
             folder_id (str | None): Unique identifier of the folder.
             color (str | None): The color.
-        
+
         Returns:
             Note: Note result.
         """
@@ -81,6 +81,7 @@ class NoteService:
             "owner_id": owner_id,
             "title": title,
             "content": content,
+            "plain_text": (content or {}).get("text"),
             "folder_id": folder_id,
             "color": color,
         }
@@ -90,12 +91,12 @@ class NoteService:
     @staticmethod
     def get_note(db: Session, note_id: str, user_id: str) -> Note:
         """Retrieve a specific note.
-        
+
         Args:
             db (Session): Database session.
             note_id (str): Unique identifier of the note.
             user_id (str): Unique identifier of the user.
-        
+
         Returns:
             Note: Note result.
         """
@@ -103,7 +104,10 @@ class NoteService:
         if not note:
             raise NotFoundError("Note not found")
         if note.owner_id != user_id:
-            raise PermissionDeniedError("Access denied")
+            from app.models.enums import ShareResourceType
+            from app.services.share_service import ShareService
+            if not ShareService.has_access(db, ShareResourceType.NOTE, note_id, user_id):
+                raise PermissionDeniedError("Access denied")
         return note
 
     @staticmethod
@@ -111,17 +115,20 @@ class NoteService:
         db: Session, note_id: str, user_id: str, data: dict[str, Any]
     ) -> Note:
         """Update an existing note.
-        
+
         Args:
             db (Session): Database session.
             note_id (str): Unique identifier of the note.
             user_id (str): Unique identifier of the user.
             data (dict[str, Any]): The data.
-        
+
         Returns:
             Note: Note result.
         """
         note = NoteService.get_note(db, note_id, user_id)
+        if "content" in data and isinstance(data["content"], dict):
+            content = cast(dict[str, Any], data["content"])
+            data = {**data, "plain_text": content.get("text")}
         return NoteRepository.update(db, db_obj=note, update_data=data)
 
     @staticmethod
@@ -129,13 +136,13 @@ class NoteService:
         db: Session, note_id: str, user_id: str, pinned: bool
     ) -> Note:
         """Set pinned.
-        
+
         Args:
             db (Session): Database session.
             note_id (str): Unique identifier of the note.
             user_id (str): Unique identifier of the user.
             pinned (bool): Pinned flag.
-        
+
         Returns:
             Note: Note result.
         """
@@ -149,13 +156,13 @@ class NoteService:
         db: Session, note_id: str, user_id: str, folder_id: str | None
     ) -> Note:
         """Move a note to a different folder.
-        
+
         Args:
             db (Session): Database session.
             note_id (str): Unique identifier of the note.
             user_id (str): Unique identifier of the user.
             folder_id (str | None): Unique identifier of the folder.
-        
+
         Returns:
             Note: Note result.
         """
@@ -167,12 +174,12 @@ class NoteService:
     @staticmethod
     def delete_note(db: Session, note_id: str, user_id: str) -> None:
         """Delete a note.
-        
+
         Args:
             db (Session): Database session.
             note_id (str): Unique identifier of the note.
             user_id (str): Unique identifier of the user.
-        
+
         Returns:
             None: None result.
         """

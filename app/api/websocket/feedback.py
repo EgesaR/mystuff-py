@@ -45,7 +45,7 @@ feedback_manager = FeedbackConnectionManager()
 @router.websocket("/ws/feedback")
 async def feedback_ws(websocket: WebSocket) -> None:
     """Developer-only socket that receives newly submitted feeback live."""
-    token = websocket.cookies.get("access_token")
+    token = websocket.query_params.get("token") or websocket.cookies.get("access_token")
     if not token:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return

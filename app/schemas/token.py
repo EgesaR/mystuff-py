@@ -7,17 +7,13 @@ from pydantic import BaseModel
 
 
 class TokenPair(BaseModel):
-    """Represents a pair of access and refresh tokens."""
+    """Internal DTO: Represents a pair of access and refresh tokens.
+    Not exposed directly to the client; used to set HTTP-only cookies.
+    """
 
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
-
-
-class RefreshRequest(BaseModel):
-    """Schema for requesting a new token using a refresh token."""
-
-    refresh_token: str
 
 
 class AccessTokenPayload(BaseModel):

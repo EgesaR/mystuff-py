@@ -40,9 +40,17 @@ class FolderResponse(BaseModel):
     color: str
     parent_id: str | None
 
+    # Recursive relationship.
+    children: list["FolderResponse"] = Field(  # pyright: ignore[reportUnknownVariableType]
+        default_factory=list,
+    )
+
     created_at: datetime
     updated_at: datetime
 
     model_config = ConfigDict(
         from_attributes=True,
     )
+
+
+FolderResponse.model_rebuild()

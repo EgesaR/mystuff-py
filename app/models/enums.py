@@ -48,4 +48,24 @@ class NotificationType(StrEnum):
     # New social/collaboration types
     MENTION = "mention"         # When someone @tags a user
     NEW_MESSAGE = "new_message"  # Direct messages
-    
+
+    # New share invite
+    SHARE_INVITE = "share_invite"
+
+
+class ShareResourceType(StrEnum):
+    NOTE = "note"
+    FILE = "file"
+    FOLDER = "folder"
+    COLLECTION = "collection"
+
+
+class SharePermission(StrEnum):
+    VIEW = "view"
+    EDIT = "edit"
+
+
+class ShareStatus(StrEnum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REVOKED = "revoked"

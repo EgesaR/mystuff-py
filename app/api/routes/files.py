@@ -308,3 +308,15 @@ async def upload_file(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
         ) from exc
+
+
+@router.get(
+    "/folders/shared",
+    response_model=list[FolderResponse],
+    summary="List folders shared with the current user",
+)
+def list_shared_folders(
+    current_user: User = Depends(require_active_user),
+    db: Session = Depends(get_db),
+) -> list[FolderResponse]:
+    return FolderService.list_shared_folders(db, user_id=current_user.id)

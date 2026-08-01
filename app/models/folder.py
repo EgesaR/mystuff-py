@@ -47,3 +47,11 @@ class Folder(Base, UUIDMixin, TimestampMixin):
     parent: Mapped["Folder | None"] = relationship(
         remote_side="Folder.id",
     )
+
+    if TYPE_CHECKING:
+        # Transient, populated only in FolderService._build_children() when
+        # assembling a nested tree response. Never mapped to a DB column,
+        # never queried, never persisted — this block doesn't execute at
+        # runtime, it just gives the type checker something to validate
+        # `folder.children = [...]` against.
+        children: list["Folder"]

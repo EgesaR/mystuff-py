@@ -4,7 +4,7 @@ from typing import Any
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
-from app.core.errors import NotFoundError
+from app.core.errors import NotFoundError, PermissionDeniedError
 from app.models.user import User
 from app.repositories.file_repository import FileRepository
 from app.services.storage_service import StorageService
@@ -16,12 +16,12 @@ class FileService:
         db: Session, user_id: str, folder_id: str | None = None
     ) -> list[Any]:
         """List files.
-        
+
         Args:
             db (Session): Database session.
             user_id (str): Unique identifier of the user.
             folder_id (str | None): Unique identifier of the folder.
-        
+
         Returns:
             list[Any]: List of Any.
         """
@@ -35,16 +35,15 @@ class FileService:
         folder_id: str | None = None,
         display_name: str | None = None,
     ) -> Any:
-
         """Upload file.
-        
+
         Args:
             db (Session): Database session.
             upload (UploadFile): The upload.
             owner (User): The owner.
             folder_id (str | None): Unique identifier of the folder.
             display_name (str | None): The display name.
-        
+
         Returns:
             Any: Result value.
         """
@@ -70,12 +69,12 @@ class FileService:
     @staticmethod
     def get_file(db: Session, file_id: str, user_id: str) -> Any:
         """Retrieve file.
-        
+
         Args:
             db (Session): Database session.
             file_id (str): Unique identifier of the file.
             user_id (str): Unique identifier of the user.
-        
+
         Returns:
             Any: Result value.
         """
@@ -83,6 +82,11 @@ class FileService:
             db, file_id=file_id, user_id=user_id)
         if not file:
             raise NotFoundError("File not found")
+        if file.owner_id != user_id:
+            from app.models.enums import ShareResourceType
+            from app.services.share_service import ShareService
+            if not ShareService.has_access(db, ShareResourceType.FILE, file_id, user_id):
+                raise PermissionDeniedError("Access denied")
         return file
 
     @staticmethod
@@ -90,13 +94,13 @@ class FileService:
         db: Session, file_id: str, user_id: str, folder_id: str | None
     ) -> Any:
         """Move file.
-        
+
         Args:
             db (Session): Database session.
             file_id (str): Unique identifier of the file.
             user_id (str): Unique identifier of the user.
             folder_id (str | None): Unique identifier of the folder.
-        
+
         Returns:
             Any: Result value.
         """
@@ -108,12 +112,12 @@ class FileService:
     @staticmethod
     async def delete_file(db: Session, file_id: str, user_id: str) -> None:
         """Delete file.
-        
+
         Args:
             db (Session): Database session.
             file_id (str): Unique identifier of the file.
             user_id (str): Unique identifier of the user.
-        
+
         Returns:
             None: None result.
         """

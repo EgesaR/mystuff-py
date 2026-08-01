@@ -29,6 +29,7 @@ from app.api.routes.logs import router as logs_router
 from app.api.routes.media import router as media_router
 from app.api.routes.notes import router as notes_router
 from app.api.routes.notifications import router as notifications_router
+from app.api.routes.shares import router as shares_router
 from app.api.routes.users import router as users_router
 from app.api.routes.workspace import router as workspace_router
 from app.api.websocket.dictate import router as dictate_ws_router
@@ -133,6 +134,8 @@ app.include_router(workspace_router, prefix="/api/tabs",
 
 app.include_router(feedback_router, prefix="/api/feedback",
                    tags=["Feedback"])
+
+app.include_router(shares_router, prefix="/api/shares", tags=["shares"])
 
 # WebSockets
 app.include_router(dictate_ws_router)

@@ -21,7 +21,7 @@ from app.schemas.media import (
     NoteMediaResponse,
 )
 from app.schemas.note import NoteCreate, NoteResponse, NoteUpdate
-from app.schemas.token import RefreshRequest, TokenPair
+from app.schemas.token import TokenPair
 from app.schemas.user import UserResponse, UserUpdate
 
 __all__ = [
@@ -33,7 +33,6 @@ __all__ = [
     "ResetPasswordRequest",
     "ChangePasswordRequest",
     "TokenPair",
-    "RefreshRequest",
     "UserResponse",
     "UserUpdate",
     "FolderCreate",

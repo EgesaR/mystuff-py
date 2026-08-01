@@ -8,6 +8,7 @@ from app.models.folder import Folder
 from app.models.media import AudioNote, MediaItem, NoteMedia
 from app.models.note import Note
 from app.models.notification import Notification
+from app.models.share import Share
 from app.models.system_log import SystemLog
 from app.models.user import User
 from app.models.workspace import WorkspaceState
@@ -27,5 +28,6 @@ __all__ = [
     "Collection",
     "CollectionFile",
     "WorkspaceState",
-    "Feedback"
+    "Feedback",
+    "Share"
 ]
