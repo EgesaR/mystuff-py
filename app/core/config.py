@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     @property
     def is_sqlite(self) -> bool:
         """Return whether sqlite.
-        
+
         Returns:
             bool: True if successful, False otherwise.
         """
@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     @property
     def max_upload_size_bytes(self) -> int:
         """Return the maximum upload size bytes.
-        
+
         Returns:
             int: int result.
         """
@@ -125,6 +125,7 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "https://localhost:5173",
         "https://mystuffs.vercel.app",
+        "http://192.168.8.60:5173"
     ]
 
     # ==========================================================================

@@ -2,6 +2,7 @@
 
 from app.models.auth import PasswordResetToken, RefreshToken
 from app.models.collection import Collection, CollectionFile
+from app.models.comment import NoteComment
 from app.models.feedback import Feedback
 from app.models.file import File
 from app.models.folder import Folder
@@ -29,5 +30,6 @@ __all__ = [
     "CollectionFile",
     "WorkspaceState",
     "Feedback",
-    "Share"
+    "Share",
+    "NoteComment"
 ]

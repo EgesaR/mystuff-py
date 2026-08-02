@@ -22,6 +22,7 @@ from starlette.requests import Request
 
 from app.api.routes.auth import router as auth_router
 from app.api.routes.collections import router as collection_router
+from app.api.routes.comments import router as comments_router
 from app.api.routes.feedback import router as feedback_router
 from app.api.routes.files import router as files_router
 from app.api.routes.health import router as health_router
@@ -112,6 +113,12 @@ app.include_router(
 )
 
 app.include_router(
+    comments_router,
+    prefix="/api/notes",
+    tags=["Comments"],
+)
+
+app.include_router(
     media_router,
     prefix="/api/media",
     tags=["Media"],
@@ -154,14 +161,7 @@ class CorrectionRequest(BaseModel):
 async def accent_correct(
     body: CorrectionRequest,
 ) -> dict[str, Any]:
-    """Submit an accent correction request.
-
-    Args:
-        body (CorrectionRequest): Request body payload.
-
-    Returns:
-        dict[str, Any]: Response payload.
-    """
+    """Submit an accent correction request."""
     return TranscriptionService.submit_correction(
         body.raw,
         body.corrected,
@@ -170,11 +170,7 @@ async def accent_correct(
 
 @app.get("/api/accent/profile", tags=["AI / Accent"])
 async def accent_profile() -> dict[str, Any]:
-    """Retrieve the current accent correction profile.
-
-    Returns:
-        dict[str, Any]: Response payload.
-    """
+    """Retrieve the current accent correction profile."""
     return TranscriptionService.get_profile()
 
 
@@ -182,24 +178,13 @@ async def accent_profile() -> dict[str, Any]:
 async def accent_forget(
     word: str,
 ) -> dict[str, Any]:
-    """Forget a learned accent correction for a word.
-
-    Args:
-        word (str): Word to process.
-
-    Returns:
-        dict[str, Any]: Response payload.
-    """
+    """Forget a learned accent correction for a word."""
     return TranscriptionService.forget_correction(word)
 
 
 @app.get("/")
 async def root() -> dict[str, Any]:
-    """Return service health and metadata.
-
-    Returns:
-        dict[str, Any]: Response payload.
-    """
+    """Return service health and metadata."""
     return {
         "message": f"{settings.APP_NAME} is running",
         "docs": "/docs",
@@ -212,15 +197,7 @@ async def user_exists_exception_handler(
     _request: Request,
     exc: UserAlreadyExistsError,
 ) -> JSONResponse:
-    """User exists exception handler.
-
-    Args:
-        _request (Request): Request payload.
-        exc (UserAlreadyExistsError): The exc.
-
-    Returns:
-        JSONResponse: JSONResponse payload.
-    """
+    """User exists exception handler."""
     return JSONResponse(
         status_code=400,
         content={

@@ -48,6 +48,7 @@ class NotificationType(StrEnum):
     # New social/collaboration types
     MENTION = "mention"         # When someone @tags a user
     NEW_MESSAGE = "new_message"  # Direct messages
+    COMMENT = "comment"     # Comments from a user
 
     # New share invite
     SHARE_INVITE = "share_invite"

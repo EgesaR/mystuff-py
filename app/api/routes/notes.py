@@ -1,16 +1,27 @@
-"""Note CRUD + search + pin/unpin endpoints."""
+"""Note CRUD + search + pin/unpin + media endpoints."""
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
 from sqlalchemy.orm import Session
 
 from app.api.deps.auth import require_active_user
 from app.api.deps.database import get_db
 from app.core.errors import NotFoundError, PermissionDeniedError
+from app.models.media import NoteMedia
 from app.models.note import Note
 from app.models.user import User
+from app.schemas.media import NoteMediaResponse
 from app.schemas.note import NoteCreate, NoteResponse, NoteUpdate
+from app.services.media_service import MediaService
 from app.services.note_service import NoteService
 
 logger = logging.getLogger("app")
@@ -29,18 +40,7 @@ def list_notes(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[Note]:
-    """List notes for the current user.
-    
-    Args:
-        folder_id (str | None): Unique identifier of the folder.
-        q (str | None): The q.
-        pinned_only (bool): Pinned only flag.
-        current_user (User): Authenticated user performing the action.
-        db (Session): Database session.
-    
-    Returns:
-        list[Note]: List of Note.
-    """
+    """List notes for the current user."""
     if q:
         return NoteService.search_notes(db, user_id=current_user.id, query=q)
     if pinned_only:
@@ -61,18 +61,8 @@ def create_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
-    """Create a new note.
-    
-    Args:
-        payload (NoteCreate): Request payload.
-        current_user (User): Authenticated user performing the action.
-        db (Session): Database session.
-    
-    Returns:
-        Note: Note result.
-    """
+    """Create a new note."""
     try:
-        # With the NoteCreate schema updated, payload.folder_id is now valid
         return NoteService.create_note(
             db,
             owner_id=current_user.id,
@@ -86,6 +76,7 @@ def create_note(
             status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found"
         ) from exc
 
+
 @router.get(
     "/{note_id}",
     response_model=NoteResponse,
@@ -96,16 +87,7 @@ def get_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
-    """Retrieve a specific note.
-    
-    Args:
-        note_id (str): Unique identifier of the note.
-        current_user (User): Authenticated user performing the action.
-        db (Session): Database session.
-    
-    Returns:
-        Note: Note result.
-    """
+    """Retrieve a specific note."""
     try:
         return NoteService.get_note(db, note_id=note_id, user_id=current_user.id)
     except NotFoundError as exc:
@@ -129,17 +111,7 @@ def update_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
-    """Update an existing note.
-    
-    Args:
-        note_id (str): Unique identifier of the note.
-        payload (NoteUpdate): Request payload.
-        current_user (User): Authenticated user performing the action.
-        db (Session): Database session.
-    
-    Returns:
-        Note: Note result.
-    """
+    """Update an existing note."""
     try:
         return NoteService.update_note(
             db,
@@ -167,16 +139,7 @@ def pin_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
-    """Pin a note.
-    
-    Args:
-        note_id (str): Unique identifier of the note.
-        current_user (User): Authenticated user performing the action.
-        db (Session): Database session.
-    
-    Returns:
-        Note: Note result.
-    """
+    """Pin a note."""
     try:
         return NoteService.set_pinned(
             db, note_id=note_id, user_id=current_user.id, pinned=True
@@ -201,16 +164,7 @@ def unpin_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
-    """Unpin a note.
-    
-    Args:
-        note_id (str): Unique identifier of the note.
-        current_user (User): Authenticated user performing the action.
-        db (Session): Database session.
-    
-    Returns:
-        Note: Note result.
-    """
+    """Unpin a note."""
     try:
         return NoteService.set_pinned(
             db, note_id=note_id, user_id=current_user.id, pinned=False
@@ -238,17 +192,7 @@ def move_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
-    """Move a note to a different folder.
-    
-    Args:
-        note_id (str): Unique identifier of the note.
-        folder_id (str | None): Unique identifier of the folder.
-        current_user (User): Authenticated user performing the action.
-        db (Session): Database session.
-    
-    Returns:
-        Note: Note result.
-    """
+    """Move a note to a different folder."""
     try:
         return NoteService.move_note(
             db, note_id=note_id, user_id=current_user.id, folder_id=folder_id
@@ -274,16 +218,7 @@ def delete_note(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
-    """Delete a note.
-    
-    Args:
-        note_id (str): Unique identifier of the note.
-        current_user (User): Authenticated user performing the action.
-        db (Session): Database session.
-    
-    Returns:
-        None: None result.
-    """
+    """Delete a note."""
     try:
         NoteService.delete_note(db, note_id=note_id, user_id=current_user.id)
     except NotFoundError as exc:
@@ -293,4 +228,35 @@ def delete_note(
     except PermissionDeniedError as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        ) from exc
+
+
+@router.post(
+    "/{note_id}/media",
+    response_model=NoteMediaResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Upload an image and attach it to this note",
+)
+async def upload_note_image(
+    note_id: str,
+    file: UploadFile = File(...),
+    current_user: User = Depends(require_active_user),
+    db: Session = Depends(get_db),
+) -> NoteMedia:
+    """Upload and attach an image to a note."""
+    try:
+        return await MediaService.add_note_image(
+            db, note_id=note_id, upload=file, user_id=current_user.id
+        )
+    except NotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Note not found"
+        ) from exc
+    except PermissionDeniedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
         ) from exc
