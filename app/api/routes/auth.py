@@ -84,6 +84,17 @@ def set_auth_cookies(
         **get_cookie_options(),
         "max_age": 60 * 60 * 24 * 7,
     }
+    
+    print("========== COOKIE CONFIG ==========")
+    print("Environment:", settings.ENVIRONMENT)
+    print("DEBUG:", settings.DEBUG)
+    print("Access cookie options:")
+    print(access_options)
+    print("Refresh cookie options:")
+    print(refresh_options)
+    print("Access token length:", len(access_token))
+    print("Refresh token length:", len(refresh_token))
+    print("===================================")
 
     response.set_cookie(
         key="access_token",

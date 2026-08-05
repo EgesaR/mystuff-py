@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, WebSocket, WebSocketException, status
 from sqlalchemy.orm import Session
 
 from app.core.security import decode_access_token
@@ -8,10 +8,10 @@ from app.models.user import User
 
 def get_token_from_cookie(request: Request) -> str:
     """Retrieve token from cookie.
-    
+
     Args:
         request (Request): Incoming HTTP request.
-    
+
     Returns:
         str: Processed string result.
     """
@@ -29,11 +29,11 @@ def get_current_user(
     db: Session = Depends(get_db),
 ) -> User:
     """Retrieve current user.
-    
+
     Args:
         token (str): Token string.
         db (Session): Database session.
-    
+
     Returns:
         User: User data.
     """
@@ -60,10 +60,10 @@ def require_active_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Require active user.
-    
+
     Args:
         current_user (User): Authenticated user performing the action.
-    
+
     Returns:
         User: User data.
     """
@@ -92,3 +92,40 @@ def require_developer(
             detail="Developer access required",
         )
     return current_user
+
+
+def get_token_from_ws_cookie(websocket: WebSocket) -> str:
+    """Retrieve token from websocket cookie."""
+    token = websocket.cookies.get("access_token")
+    if not token:
+        # WebSockets must use WebSocketException, not HTTPException
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="Not authenticated: missing access_token cookie"
+        )
+    return token
+
+
+def get_current_user_ws(
+    websocket: WebSocket,
+    token: str = Depends(get_token_from_ws_cookie),
+    db: Session = Depends(get_db)
+) -> User:
+    """Retrieve current user for WebSocket connections."""
+    payload = decode_access_token(token)
+
+    if payload is None:
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="Invalid or expired token"
+        )
+
+    user = db.query(User).filter(User.id == payload.sub).first()
+
+    if user is None or not user.is_active:
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="User not found or inactive"
+        )
+
+    return user
