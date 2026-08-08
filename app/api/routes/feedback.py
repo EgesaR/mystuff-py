@@ -43,7 +43,6 @@ async def submit_feedback(
     Returns:
         Feedback: Feedback result.
     """
-    print("Message: ", payload.message)
     feedback = FeedbackService.submit_feedback(
         db,
         user_id=current_user.id,

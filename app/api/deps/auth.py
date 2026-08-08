@@ -129,3 +129,16 @@ def get_current_user_ws(
         )
 
     return user
+
+
+def require_developer_ws(
+    current_user: User = Depends(get_current_user_ws)
+) -> User:
+    """Require developer privileges for WebSocket connections."""
+    if not getattr(current_user, "is_developer", False):
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="Developer access required"
+        )
+
+    return current_user

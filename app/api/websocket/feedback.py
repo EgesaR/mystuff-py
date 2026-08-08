@@ -1,16 +1,12 @@
 """WebSocket endpoint pushing new feedback to connected developers in real time."""
 
+import asyncio
 import logging
 
-# 1. Removed unused `status` import
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 
-from app.api.deps.auth import get_current_user_ws
-# 2. Added the missing User model import to fix E0602/F821.
-# (Adjust this path if your User model is located elsewhere, e.g., app.schemas.user)
+from app.api.deps.auth import require_developer_ws
 from app.models.user import User
-
-# 3. Removed unused imports (decode_access_token, SessionLocal, UserRepository)
 
 logger = logging.getLogger("app")
 router = APIRouter()
@@ -26,10 +22,18 @@ class FeedbackConnectionManager:
         """Accept and register a new developer connection."""
         await websocket.accept()
         self._connections.add(websocket)
+        logger.info(
+            "Developer connected. Total connections: %d",
+            len(self._connections)
+        )
 
     def disconnect(self, websocket: WebSocket) -> None:
         """Remove a connection, e.g. after disconnect or a failed send."""
         self._connections.discard(websocket)
+        logger.info(
+            "Developer disconnected. Total connections: %d",
+            len(self._connections)
+        )
 
     async def broadcast(self, payload: dict[str, str]) -> None:
         """Send a payload to every connected developer, pruning dead sockets."""
@@ -37,10 +41,11 @@ class FeedbackConnectionManager:
         for connection in self._connections:
             try:
                 await connection.send_json(payload)
-            # 4. Catching `Exception as e` and logging it mitigates the
-            # W0718 "broad-exception-caught" warning while aiding debugging.
             except Exception as e:
-                logger.warning("Failed to send message to a connection: %s", e)
+                logger.warning(
+                    "Failed to send message to a connection: %s",
+                    e
+                )
                 stale.append(connection)
         for connection in stale:
             self.disconnect(connection)
@@ -49,31 +54,46 @@ class FeedbackConnectionManager:
 feedback_manager = FeedbackConnectionManager()
 
 
-# 5. Split the function signature into multiple lines to fix C0301 (line too long)
 @router.websocket("/ws/feedback")
 async def feedback_ws(
     websocket: WebSocket,
-    current_user: User = Depends(get_current_user_ws)
+    current_user: User = Depends(require_developer_ws)
 ) -> None:
-    # 6. Moved the docstring to the very top of the function to fix W0105
-    # ("String statement has no effect"). Docstrings must be the first statement.
     """Developer-only socket that receives newly submitted feedback live."""
 
-    print("========== WEBSOCKET DEBUG ==========")
-    print("Headers:")
-    print(dict(websocket.headers))
-
-    print("Cookies:")
-    print(websocket.cookies)
-
-    print("Query params:")
-    print(dict(websocket.query_params))
-    print("=====================================")
-
-    await websocket.accept()
+    await feedback_manager.connect(websocket)
     try:
         while True:
-            data = await websocket.receive_text()
-            await websocket.send_text(f"Message received from {current_user.username}: {data}")
+            try:
+                # Wait for client message (including heartbeat pings)
+                data = await asyncio.wait_for(
+                    websocket.receive_text(),
+                    timeout=60.0  # force disconnect if client is silent
+                )
+
+                # Apllication-level heartbeat
+                if data == "ping":
+                    await websocket.send_text("pong")
+                    continue
+
+                # You can handle other client -> server messages here if need
+                logger.debug(
+                    "Received from %s: %s",
+                    current_user.username,
+                    data
+                )
+                await websocket.send_text(f"Message received from {current_user.username}: {data}")
+                # await websocket.send_json({"type": "ack", "message": data})
+            except TimeoutError:
+                # No messages received in time -> client is probably dead
+                logger.info("Heatbeat timeout for %s", current_user.username)
+                break
+
     except WebSocketDisconnect:
+        logger.info(
+            "Client %s disconnected",
+            current_user.username
+        )
         print(f"Client {current_user.username} disconnected")
+    finally:
+        feedback_manager.disconnect(websocket)
