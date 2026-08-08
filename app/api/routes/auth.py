@@ -20,6 +20,7 @@ from app.schemas.auth import (
     ForgotPasswordRequest,
     ForgotPasswordResponse,
     LoginRequest,
+    LoginResponse,
     ResetPasswordRequest,
     SignupRequest,
 )
@@ -84,7 +85,7 @@ def set_auth_cookies(
         **get_cookie_options(),
         "max_age": 60 * 60 * 24 * 7,
     }
-    
+
     print("========== COOKIE CONFIG ==========")
     print("Environment:", settings.ENVIRONMENT)
     print("DEBUG:", settings.DEBUG)
@@ -163,7 +164,12 @@ def signup(
             tokens.refresh_token,
         )
 
-        return user
+        return {
+            "user": user,
+            "access_token": tokens.access_token,
+            "token_type": "bearer"
+        }
+        
     except UserAlreadyExistsError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -172,7 +178,7 @@ def signup(
 
 
 # ── Login ─────────────────────────────────────────────────────────────────────
-@router.post("/login", response_model=UserResponse)
+@router.post("/login", response_model=LoginResponse)
 def login(
     payload: LoginRequest,
     response: Response,  # Add response injection
@@ -204,7 +210,11 @@ def login(
         tokens.refresh_token,
     )
 
-    return user
+    return {
+        "user": user,
+        "access_token": tokens.access_token,
+        "token_type": "bearer"
+    }
 
 
 # ── Refresh ───────────────────────────────────────────────────────────────────

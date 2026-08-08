@@ -2,6 +2,8 @@
 
 from pydantic import BaseModel, EmailStr, Field
 
+from app.schemas.user import UserResponse
+
 
 class SignupRequest(BaseModel):
     """Schema for user signup requests."""
@@ -34,7 +36,15 @@ class LoginRequest(BaseModel):
 
     email: EmailStr
     password: str
+    
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
 
+class LoginResponse(BaseModel):
+    user: UserResponse
+    access_token: str
+    token_type: str = "bearer"
 
 class ForgotPasswordRequest(BaseModel):
     """Schema for initiating a password reset process."""
