@@ -83,7 +83,8 @@ async def feedback_ws(
     Authentication is performed before this endpoint executes
     through the require_developer_ws dependency.
     """
-
+    logger.info("WS accepted for user %s (developer=%s)",
+            current_user.id, current_user.is_developer)
     await feedback_manager.connect(websocket)
 
     logger.info(

@@ -1,6 +1,9 @@
+import logging
+
 from fastapi import (
     Depends,
     HTTPException,
+    Query,
     Request,
     WebSocket,
     WebSocketException,
@@ -12,6 +15,12 @@ from app.core.security import decode_access_token
 from app.database.session import get_db
 from app.models.user import User
 
+logger = logging.getLogger("app")
+
+
+# ──────────────────────────────────────────────────────────────
+# HTTP Auth
+# ──────────────────────────────────────────────────────────────
 
 def get_token_from_cookie(request: Request) -> str:
     """Retrieve the access token from the HTTP cookie."""
@@ -31,7 +40,6 @@ def get_current_user(
     db: Session = Depends(get_db),
 ) -> User:
     """Retrieve the currently authenticated HTTP user."""
-
     payload = decode_access_token(token)
 
     if payload is None:
@@ -55,13 +63,11 @@ def require_active_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Require the authenticated user to be active."""
-
     if not current_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive user",
         )
-
     return current_user
 
 
@@ -69,35 +75,38 @@ def require_developer(
     current_user: User = Depends(require_active_user),
 ) -> User:
     """Require the current user to have developer privileges."""
-
     if not getattr(current_user, "is_developer", False):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Developer access required",
         )
-
     return current_user
 
 
-def get_token_from_ws_cookie(websocket: WebSocket) -> str:
-    """Retrieve the access token from the WebSocket handshake cookie."""
+# ──────────────────────────────────────────────────────────────
+# WebSocket Auth
+# ──────────────────────────────────────────────────────────────
 
-    token = websocket.cookies.get("access_token")
+def get_current_user_ws(
+    websocket: WebSocket,
+    token: str | None = Query(None),
+    db: Session = Depends(get_db),
+) -> User:
+    """
+    Retrieve the currently authenticated WebSocket user.
+
+    Token is taken from:
+    1. Query parameter  (?token=...)   ← needed for production (cross-origin)
+    2. Cookie           (access_token) ← works in local development
+    """
+    if not token:
+        token = websocket.cookies.get("access_token")
 
     if not token:
         raise WebSocketException(
             code=status.WS_1008_POLICY_VIOLATION,
-            reason="Not authenticated: missing access_token cookie",
+            reason="Not authenticated",
         )
-
-    return token
-
-
-def get_current_user_ws(
-    token: str = Depends(get_token_from_ws_cookie),
-    db: Session = Depends(get_db),
-) -> User:
-    """Retrieve the currently authenticated WebSocket user."""
 
     payload = decode_access_token(token)
 
@@ -121,6 +130,12 @@ def get_current_user_ws(
             reason="Inactive user",
         )
 
+    logger.info(
+        "WS auth – user=%s is_developer=%s",
+        user.id,
+        getattr(user, "is_developer", False),
+    )
+
     return user
 
 
@@ -128,11 +143,9 @@ def require_developer_ws(
     current_user: User = Depends(get_current_user_ws),
 ) -> User:
     """Require developer privileges for WebSocket connections."""
-
     if not getattr(current_user, "is_developer", False):
         raise WebSocketException(
             code=status.WS_1008_POLICY_VIOLATION,
             reason="Developer access required",
         )
-
     return current_user
