@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy import Enum, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -32,7 +32,7 @@ class Share(Base, UUIDMixin,  TimestampMixin):
 
     # The opaque, encrypted "shared id" - this is what goes in links/notifications
     # instead of exposing resource_id/owner_id directly.
-    token: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    token: Mapped[str] = mapped_column(Text, unique=True, index=True)
 
     owner: Mapped["User"] = relationship(foreign_keys=[owner_id])
     target_user: Mapped["User | None"] = relationship(
