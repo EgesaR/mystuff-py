@@ -51,7 +51,7 @@ class NotificationType(StrEnum):
     COMMENT = "comment"     # Comments from a user
 
     # New share invite
-    SHARE_INVITE = "share_invite"
+    SHARE_INVITE = "SHARE_INVITE"
 
 
 class ShareResourceType(StrEnum):
