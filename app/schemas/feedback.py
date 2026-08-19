@@ -13,6 +13,7 @@ class FeedbackCreate(BaseModel):
 
     message: str = Field(min_length=1, max_length=4000)
     category: Literal["bug", "feature", "general", "praise"] = "general"
+    attached_logs: str | None = Field(default=None, max_length=100000)
 
 
 class FeedbackStatusUpdate(BaseModel):
@@ -38,6 +39,7 @@ class FeedbackResponse(BaseModel):
     message: str
     category: str
     status: str
+    attached_logs: str | None = None
     user: FeedbackUserSummary
     created_at: datetime
 

@@ -31,19 +31,25 @@ class BaseRepository[ModelT]:
         return db.query(cls.model).filter(cls.model.id == object_id).first()  # type: ignore
 
     @classmethod
-    def get_all(cls, db: Session, skip: int = 0, limit: int = 100) -> list[ModelT]:
+    def get_all(
+        cls,
+        db: Session,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> list[ModelT]:
         """Retrieve all.
-        
+
         Args:
-            db (Session): Database session.
-            skip (int): Skip integer.
-            limit (int): Limit integer.
-        
+            db: Database session.
+            skip: Number of records to skip.
+            limit: Maximum number of records to return.
+
         Returns:
-            list[ModelT]: List of ModelT.
+            List of ModelT.
         """
         return db.query(cls.model).offset(skip).limit(limit).all()
-
+    
     @classmethod
     def create(cls, db: Session, obj_in: dict[str, Any]) -> ModelT:
         """Create.

@@ -1,8 +1,11 @@
 # ruff: noqa: F401
 
 from app.models.auth import PasswordResetToken, RefreshToken
+from app.models.blog_post import BlogPost
 from app.models.collection import Collection, CollectionFile
 from app.models.comment import NoteComment
+from app.models.contact_messages import ContactMessage
+from app.models.doc_page import DocPage
 from app.models.feedback import Feedback
 from app.models.file import File
 from app.models.folder import Folder
@@ -31,5 +34,8 @@ __all__ = [
     "WorkspaceState",
     "Feedback",
     "Share",
-    "NoteComment"
+    "NoteComment",
+    "BlogPost",
+    "DocPage",
+    "ContactMessage"
 ]

@@ -48,6 +48,7 @@ async def submit_feedback(
         user_id=current_user.id,
         message=payload.message,
         category=payload.category,
+        attached_logs= payload.attached_logs
     )
 
     await feedback_manager.broadcast(

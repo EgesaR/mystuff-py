@@ -12,7 +12,7 @@ class FeedbackService:
 
     @staticmethod
     def submit_feedback(
-        db: Session, user_id: str, message: str, category: str
+        db: Session, user_id: str, message: str, category: str, attached_logs: str | None = None
     ) -> Feedback:
         """Submit new feedback on behalf of a user.
 
@@ -29,6 +29,7 @@ class FeedbackService:
             "user_id": user_id,
             "message": message,
             "category": category,
+            "attached_logs": attached_logs
         }
         return FeedbackRepository.create(db, obj_in=feedback_data)
 

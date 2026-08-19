@@ -21,8 +21,11 @@ from pydantic import BaseModel
 from starlette.requests import Request
 
 from app.api.routes.auth import router as auth_router
+from app.api.routes.blog import router as blog_router
 from app.api.routes.collections import router as collection_router
 from app.api.routes.comments import router as comments_router
+from app.api.routes.contact import router as contact_router
+from app.api.routes.docs import router as docs_router
 from app.api.routes.feedback import router as feedback_router
 from app.api.routes.files import router as files_router
 from app.api.routes.health import router as health_router
@@ -143,6 +146,24 @@ app.include_router(feedback_router, prefix="/api/feedback",
                    tags=["Feedback"])
 
 app.include_router(shares_router, prefix="/api/shares", tags=["shares"])
+
+app.include_router(
+    blog_router,
+    prefix="/api/blog",
+    tags=["Blog"],
+)
+
+app.include_router(
+    docs_router,
+    prefix="/api/docs",
+    tags=["Docs"],
+)
+
+app.include_router(
+    contact_router,
+    prefix="/api/contact",
+    tags=["Contact"],
+)
 
 # WebSockets
 app.include_router(dictate_ws_router)

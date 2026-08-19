@@ -19,6 +19,8 @@ class Feedback(Base, UUIDMixin, TimestampMixin):
 
     message: Mapped[str] = mapped_column(Text)
 
+    attached_logs: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     category: Mapped[str] = mapped_column(String(30), default="general")
 
     status: Mapped[str] = mapped_column(String(20), default="new")
