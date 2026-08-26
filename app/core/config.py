@@ -13,27 +13,15 @@ DEFAULT_UPLOAD_DIR = PROJECT_ROOT / "data" / "uploads"
 class Settings(BaseSettings):
     """Application settings configuration."""
 
-    # ==========================================================================
     # Application
-    # ==========================================================================
-
     APP_NAME: str = "My Stuff API"
     APP_VERSION: str = "1.0.0"
-
-    ENVIRONMENT: Literal[
-        "development",
-        "staging",
-        "production",
-    ] = "development"
-
+    ENVIRONMENT: Literal["development",
+                         "staging", "production"] = "development"
     DEBUG: bool = False
-
     API_PREFIX: str = "/api"
 
-    # ==========================================================================
     # Database
-    # ==========================================================================
-
     DATABASE_URL: str = f"sqlite:///{PROJECT_ROOT / 'data' / 'db' / 'mystuff.db'}"
     POSTGRES_POOL_SIZE: int = 10
     POSTGRES_MAX_OVERFLOW: int = 20
@@ -41,52 +29,27 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def is_sqlite(self) -> bool:
-        """Return whether sqlite.
-
-        Returns:
-            bool: True if successful, False otherwise.
-        """
+        """Return whether database is sqlite."""
         return self.DATABASE_URL.startswith("sqlite")
 
-    # ==========================================================================
     # Security
-    # ==========================================================================
-
     SECRET_KEY: str
-
     ALGORITHM: Literal["HS256"] = "HS256"
-
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 720
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # ==========================================================================
     # Uploads
-    # ==========================================================================
-
     UPLOAD_DIR: Path = DEFAULT_UPLOAD_DIR
-
     MAX_UPLOAD_SIZE_MB: int = 500
 
     @computed_field
     @property
     def max_upload_size_bytes(self) -> int:
-        """Return the maximum upload size bytes.
-
-        Returns:
-            int: int result.
-        """
+        """Return the maximum upload size bytes."""
         return self.MAX_UPLOAD_SIZE_MB * 1024 * 1024
 
-    # ==========================================================================
     # Storage
-    # ==========================================================================
-
-    STORAGE_PROVIDER: Literal[
-        "local",
-        "r2",
-        "s3",
-    ] = "local"
-
+    STORAGE_PROVIDER: Literal["local", "r2", "s3"] = "local"
     S3_ACCESS_KEY_ID: str | None = None
     S3_SECRET_ACCESS_KEY: str | None = None
     S3_ENDPOINT_URL: str | None = None
@@ -94,42 +57,29 @@ class Settings(BaseSettings):
     S3_REGION: str = "auto"
     S3_CUSTOM_DOMAIN: str | None = None
 
-    # ==========================================================================
     # Hugging Face
-    # ==========================================================================
-
     HF_TOKEN: str | None = None
 
-    # ==========================================================================
-    # Email
-    # ==========================================================================
-
+    # Email / SMTP
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
+    SMTP_STARTTLS: bool = True
+    SMTP_SSL_TLS: bool = False
     EMAIL_FROM: str = "noreply@mystuff.app"
+    EMAIL_FROM_NAME: str = "My Stuff"
 
-    # ==========================================================================
     # Features
-    # ==========================================================================
-
     DEMO_MODE: bool = True
 
-    # ==========================================================================
     # CORS
-    # ==========================================================================
-
     ALLOWED_ORIGINS: list[str] = [
         "http://localhost:5173",
         "https://localhost:5173",
         "https://mystuffs.vercel.app",
-        "http://192.168.8.60:5173"
+        "http://192.168.8.60:5173",
     ]
-
-    # ==========================================================================
-    # Pydantic Settings
-    # ==========================================================================
 
     model_config = SettingsConfigDict(
         env_file=".env",

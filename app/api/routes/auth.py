@@ -344,13 +344,13 @@ def forgot_password(
 
 @router.post(
     "/reset-password",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_200_OK,
     summary="Reset password using a valid code",
 )
 def reset_password(
     payload: ResetPasswordRequest,
     db: Session = Depends(get_db),
-) -> None:
+) -> dict[str, str]:
     """Reset a user password using a recovery code.
 
     Args:
@@ -367,6 +367,8 @@ def reset_password(
             code=payload.code,
             new_password=payload.new_password,
         )
+
+        return {"message": "Password updated successfully."}
     except (AuthenticationError, ValueError) as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

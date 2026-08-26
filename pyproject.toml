@@ -8,42 +8,34 @@ dependencies = [
     # API
     "fastapi==0.136.1",
     "uvicorn[standard]==0.48.0",
-
     # Database
     "sqlalchemy==2.0.49",
     "alembic==1.18.4",
     "psycopg2-binary==2.9.12",
-
     # Validation / Configuration
     "pydantic==2.13.4",
     "pydantic-settings==2.14.1",
-
     # Authentication / Security
     "python-jose==3.5.0",
     "bcrypt==5.0.0",
     "email-validator==2.3.0",
-
     # Uploads / Forms
     "python-multipart==0.0.29",
     "aiofiles==25.1.0",
-
     # Email
     "aiosmtplib==5.1.0",
-
     # Storage
     "boto3==1.43.51",
-
     # Documents / Media
     "python-docx==1.2.0",
     "fpdf2==2.8.7",
     "pillow==12.3.0",
-
     # Networking
     "httpx==0.28.1",
     "websockets==16.0",
-
     # Environment
     "python-dotenv==1.2.2",
+    "fastapi-mail>=1.6.8",
 ]
 
 [dependency-groups]

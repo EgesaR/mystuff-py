@@ -1,8 +1,9 @@
 """Database models for user management."""
 
+import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, String, Text, false
+from sqlalchemy import Boolean, DateTime, String, Text, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -58,6 +59,17 @@ class User(Base, UUIDMixin, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,
+    )
+
+    reset_code: Mapped[str | None] = mapped_column(
+        String(6),
+        nullable=True,
+        index=True
+    )
+
+    reset_code_expires_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
     )
 
     folders: Mapped[list["Folder"]] = relationship(

@@ -4,6 +4,7 @@ import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formataddr
 
 from app.core.config import settings
 
@@ -14,14 +15,14 @@ class EmailService:
     """Service providing methods to send various types of emails."""
 
     @staticmethod
-    def send_email(to: str, subject: str, html: str) -> bool:
-        """Send email.
-        
+    def send_email(to: str, subject: str, html: str, text: str | None = None) -> bool:
+        """Send email via SMTP with optional plain-text fallback.
+
         Args:
             to (str): To string.
             subject (str): Subject string.
             html (str): Html string.
-        
+            text (str): Text string.
         Returns:
             bool: True if successful, False otherwise.
         """
@@ -31,43 +32,109 @@ class EmailService:
             return True
 
         try:
-            msg = MIMEMultipart()
-            msg["From"] = settings.EMAIL_FROM
+            msg = MIMEMultipart("alternative")
+            msg["From"] = formataddr(
+                (settings.EMAIL_FROM_NAME, settings.EMAIL_FROM))
             msg["To"] = to
             msg["Subject"] = subject
-            msg.attach(MIMEText(html, "html"))
 
-            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as s:
-                s.starttls()
+            plain_text = text or "Please view this email in an HTML-compatible email-client."
+            msg.attach(MIMEText(plain_text, "plain_text", "utf-8"))
+            msg.attach(MIMEText(html, "html", "utf-8"))
+
+            smtp_cls = smtplib.SMTP_SSL if settings.SMTP_SSL_TLS else smtplib.SMTP
+
+            with smtp_cls(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+                if not settings.SMTP_SSL_TLS and settings.SMTP_STARTTLS:
+                    server.starttls()
 
                 if settings.SMTP_USER and settings.SMTP_PASSWORD:
-                    s.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                    server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
 
-                s.sendmail(settings.EMAIL_FROM, [to], msg.as_string())
+                server.sendmail(settings.EMAIL_FROM, [to], msg.as_string())
 
             return True
 
         except (smtplib.SMTPException, OSError):
             # Fixed: Removed unused 'e', and caught specific exceptions (W0718)
-            logger.exception("Email sending failed")
+            logger.exception("Failed to send email to %s", to)
             return False
 
     @staticmethod
-    def send_reset_code(email: str, code: str, username: str) -> bool:
-        """Send reset code.
-        
+    def send_reset_code(email: str, code: str, username: str = "User") -> bool:
+        """Send password reset verfication code via email.
+
         Args:
             email (str): Email address.
             code (str): Verification or reset code.
             username (str): Username.
-        
+
         Returns:
             bool: True if successful, False otherwise.
         """
+
+        subject = f"{code} is your password reset code"
+        text = (
+            f"Hello {username},\n\n"
+            f"Your password reset code is: {code}\n\n"
+            "This code will expire in 15 minutes. "
+            "If you did not request a password reset, please ignore this email."
+        )
+
         html = f"""
-        <h2>Password Reset</h2>
-        <p>Hello {username},</p>
-        <p>Your reset code is:</p>
-        <h3>{code}</h3>
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <style>
+                body {{
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                  line-height: 1.6;
+                  color: #1f2937;
+                  margin: 0;
+                  padding: 24px;
+                  background-color: #f9fafb;
+                }}
+                .container {{
+                  max-width: 480px;
+                  margin: 0 auto;
+                  background: #ffffff;
+                  border: 1px solid #e5e7eb;
+                  border-radius: 8px;
+                  padding: 32px;
+                }}
+                .code-box {{
+                  background-color: #f3f4f6;
+                  border: 1px solid #e5e7eb;
+                  border-radius: 6px;
+                  padding: 16px;
+                  text-align: center;
+                  font-size: 32px;
+                  font-weight: 700;
+                  letter-spacing: 6px;
+                  color: #111827;
+                  margin: 24px 0;
+                }}
+                .footer {{
+                  margin-top: 24px;
+                  font-size: 12px;
+                  color: #6b7280;
+                  text-align: center;
+                }}
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h2 style="margin-top: 0;">Password Reset Request</h2>
+                <p>Hello <strong>{username}</strong>,</p>
+                <p>Use the code below to complete your password reset request:</p>
+                <div class="code-box">{code}</div>
+                <p>This code will expire in <strong>15 minutes</strong>. If you did not request a password reset, ignore this email.</p>
+                <div class="footer">
+                  <p>&copy; {settings.APP_NAME}. All rights reserved.</p>
+                </div>
+              </div>
+            </body>
+            </html>
         """
-        return EmailService.send_email(email, "Password Reset Code", html)
+        return EmailService.send_email(email, subject, html, text=text)

@@ -1,4 +1,5 @@
 """Blog listing, reading, and developer authoring endpoints."""
+
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -18,24 +19,23 @@ from app.schemas.blog import (
 from app.services.blog_service import BlogService
 
 logger = logging.getLogger("app")
+
 router = APIRouter()
 
 
-@router.get("", response_model=list[BlogPostSummary], summary="List published blog posts")
-def list_posts(db: Session = Depends(get_db)) -> list[BlogPost]:
-    """List every published blog post, newest first.
-
-    Args:
-        db (Session): Database session.
-
-    Returns:
-        list[BlogPost]: Published posts.
-    """
+@router.get(
+    "",
+    response_model=list[BlogPostSummary],
+    summary="List published blog posts",
+)
+def list_posts(
+    db: Session = Depends(get_db),
+) -> list[BlogPost]:
+    """List every published blog post, newest first."""
     return BlogService.list_published(db)
 
 
-# NOTE: this literal route MUST be declared before GET /{slug} below, or FastAPI
-# will match "admin" as a slug and this endpoint becomes unreachable.
+# Keep this before GET /{slug} so "admin" is not treated as a slug.
 @router.get(
     "/admin",
     response_model=list[BlogPostSummary],
@@ -45,7 +45,7 @@ def list_all_posts(
     current_user: User = Depends(require_developer),
     db: Session = Depends(get_db),
 ) -> list[BlogPost]:
-    """List every blog post regardless of publish status. Requires developer access."""
+    """List every blog post regardless of publish status."""
     return BlogService.list_all(db)
 
 
@@ -59,30 +59,32 @@ def get_post_admin(
     current_user: User = Depends(require_developer),
     db: Session = Depends(get_db),
 ) -> BlogPost:
-    """Fetch a single post by id regardless of publish status. Used by the admin editor."""
+    """Fetch a single post by id regardless of publish status."""
     try:
         return BlogService.get_by_id(db, post_id)
     except NotFoundError as exc:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Blog post not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Blog post not found",
         ) from exc
 
-@router.get("/{slug}", response_model=BlogPostResponse, summary="Get a blog post by slug")
-def get_post(slug: str, db: Session = Depends(get_db)) -> BlogPost:
-    """Fetch a single published blog post by its slug.
 
-    Args:
-        slug (str): URL-safe post slug.
-        db (Session): Database session.
-
-    Returns:
-        BlogPost: The matching post.
-    """
+@router.get(
+    "/{slug}",
+    response_model=BlogPostResponse,
+    summary="Get a blog post by slug",
+)
+def get_post(
+    slug: str,
+    db: Session = Depends(get_db),
+) -> BlogPost:
+    """Fetch a single published blog post by slug."""
     try:
         return BlogService.get_by_slug(db, slug)
     except NotFoundError as exc:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Blog post not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Blog post not found",
         ) from exc
 
 
@@ -97,7 +99,7 @@ def create_post(
     current_user: User = Depends(require_developer),
     db: Session = Depends(get_db),
 ) -> BlogPost:
-    """Create a new blog post. Requires developer access."""
+    """Create a new blog post."""
     return BlogService.create_post(
         db,
         author_id=current_user.id,
@@ -121,10 +123,15 @@ def update_post(
     current_user: User = Depends(require_developer),
     db: Session = Depends(get_db),
 ) -> BlogPost:
-    """Update or publish a blog post. Requires developer access."""
+    """Update or publish a blog post."""
     try:
-        return BlogService.update_post(db, post_id, **payload.model_dump())
+        return BlogService.update_post(
+            db,
+            post_id,
+            payload,
+        )
     except NotFoundError as exc:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Blog post not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Blog post not found",
         ) from exc
