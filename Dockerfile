@@ -40,7 +40,12 @@ RUN apt-get update \
         libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN useradd --create-home --shell /usr/sbin/nologin appuser
+# Note: /app itself is still owned by root at this point (WORKDIR created it
+# before appuser existed). Chowning it here — not just the things we COPY —
+# is what lets the app create its own runtime dirs (e.g. data/, data/uploads,
+# data/temp) after it drops to appuser below.
+RUN useradd --create-home --shell /usr/sbin/nologin appuser \
+    && chown appuser:appuser /app
 
 # Pull in just the built venv from the builder stage — not uv, not pip cache,
 # not apt lists, not build tooling. This is what actually shrinks the image.
