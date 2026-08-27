@@ -23,7 +23,11 @@ orig_getaddrinfo = socket.getaddrinfo
 
 def getaddrinfo_ipv4(*args: Any, **kwargs: Any) -> Any:
     # AF_INET is the address family for IPv4
-    kwargs['family'] = socket.AF_INET
+    args_list = list(args)
+    if len(args_list) >= 3:
+        args_list[2] = socket.AF_INET
+    else:
+        kwargs['family'] = socket.AF_INET
     return orig_getaddrinfo(*args, **kwargs)
 
 
