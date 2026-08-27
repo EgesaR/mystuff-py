@@ -36,6 +36,7 @@ dependencies = [
     # Environment
     "python-dotenv==1.2.2",
     "fastapi-mail>=1.6.8",
+    "brevo-python>=5.0.2",
 ]
 
 [dependency-groups]
@@ -109,8 +110,6 @@ uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 """
 mm = "uv run alembic revision --autogenerate -m"
 migrate = "uv run alembic upgrade head"
-migrate_prod = "ENVIRONMENT=production DEBUG=false DEMO_MODE=false DATABASE_URL='postgresql://neondb_owner:npg_KV3XQsD8PWdH@ep-weathered-meadow-za06ickq-pooler.c-2.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require' SECRET_KEY='OoprAVGnRFk9ui77CEIo8H-XQJV3BOFW8WmZNLpkGwc' uv run alembic upgrade head"
-push = "bash scripts/db-push.sh"
 remove_stale = """
 find . -type d -name "__pycache__" -exec rm -rf {} + &&
 find . -type f -name "*.pyc" -delete

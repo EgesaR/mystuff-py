@@ -69,6 +69,8 @@ class Settings(BaseSettings):
     SMTP_SSL_TLS: bool = False
     EMAIL_FROM: str = "noreply@mystuff.app"
     EMAIL_FROM_NAME: str = "My Stuff"
+    
+    BREVO_API_KEY: str | None = None
 
     # Features
     DEMO_MODE: bool = True

@@ -2,13 +2,32 @@
 
 import logging
 import smtplib
+import socket
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
+from typing import Any
+
+try:
+    import requests  # type: ignore
+except ImportError:  # pragma: no cover
+    requests = None  # type: ignore[assignment]
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+# Force socket to use IPv4
+orig_getaddrinfo = socket.getaddrinfo
+
+
+def getaddrinfo_ipv4(*args: Any, **kwargs: Any) -> Any:
+    # AF_INET is the address family for IPv4
+    kwargs['family'] = socket.AF_INET
+    return orig_getaddrinfo(*args, **kwargs)
+
+
+socket.getaddrinfo = getaddrinfo_ipv4
 
 
 class EmailService:
@@ -28,9 +47,60 @@ class EmailService:
         """
         if settings.DEMO_MODE:
             # Fixed: Use lazy % formatting to satisfy Pylint W1203
+            print("DEMO Hello")
             logger.info("[DEMO EMAIL] %s | %s", to, subject)
             return True
 
+        if settings.ENVIRONMENT == "production":
+            return EmailService._send_via_brevo_api(to, subject, html, text)
+
+        return EmailService._send_via_smtp(to, subject, html, text)
+
+    @staticmethod
+    def _send_via_brevo_api(to: str, subject: str, html: str, text: str | None = None) -> bool:
+        if requests is None:
+            logger.error(
+                "The 'requests' library is required to send email via Brevo API.")
+            return False
+        api_key = getattr(settings, "BREVO_API_KEY", None)
+        if not api_key:
+            logger.error(
+                "BREVO_API_KEY is missing in production environment variables.")
+            return False
+
+        url = "https://api.brevo.com/v3/smtp/email"
+        headers = {
+            "accept": "application/json",
+            "api_key": api_key,
+            "content-type": "application/json"
+        }
+        payload = {
+            "sender": {
+                "name": settings.EMAIL_FROM_NAME,
+                "email": settings.EMAIL_FROM
+            },
+            "to": [{"email": to}],
+            "subject": subject,
+            "htmlContent": html
+        }
+
+        if text:
+            payload["textContent"] = text
+
+        try:
+            response = requests.post(
+                url, json=payload, headers=headers, timeout=10)
+            if response.status_code in (200, 201, 202):
+                return True
+            else:
+                logger.error("Brevo API error: %s", response.text)
+                return False
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Failed to send email via Brevo API to %s", to)
+            return False
+
+    @staticmethod
+    def _send_via_smtp(to: str, subject: str, html: str, text: str | None = None) -> bool:
         try:
             msg = MIMEMultipart("alternative")
             msg["From"] = formataddr(
