@@ -75,7 +75,7 @@ class EmailService:
         url = "https://api.brevo.com/v3/smtp/email"
         headers = {
             "accept": "application/json",
-            "api_key": api_key,
+            "api-key": api_key,
             "content-type": "application/json"
         }
         payload = {
