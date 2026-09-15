@@ -4,84 +4,177 @@ from pathlib import Path
 from typing import Literal
 
 from pydantic import computed_field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import (
+    BaseSettings,
+    SettingsConfigDict,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_UPLOAD_DIR = PROJECT_ROOT / "data" / "uploads"
+
+DEFAULT_UPLOAD_DIR = (
+    PROJECT_ROOT / "data" / "uploads"
+)
 
 
 class Settings(BaseSettings):
     """Application settings configuration."""
 
+    # ------------------------------------------------------------------
     # Application
+    # ------------------------------------------------------------------
+
     APP_NAME: str = "My Stuff API"
     APP_VERSION: str = "1.0.0"
-    ENVIRONMENT: Literal["development",
-                         "staging", "production"] = "development"
+
+    ENVIRONMENT: Literal[
+        "development",
+        "staging",
+        "production",
+    ] = "development"
+
     DEBUG: bool = False
+
     API_PREFIX: str = "/api"
 
+    FRONTEND_URL: str = (
+        "http://localhost:5173"
+    )
+
+    # ------------------------------------------------------------------
+    # Onboarding
+    # ------------------------------------------------------------------
+
+    ONBOARDING_VERSION: int = 1
+
+    ONBOARDING_STEPS: tuple[str, ...] = (
+        "welcome",
+        "workspace",
+        "features",
+        "feedback",
+        "beta",
+        "complete",
+    )
+
+    # ------------------------------------------------------------------
     # Database
-    DATABASE_URL: str = f"sqlite:///{PROJECT_ROOT / 'data' / 'db' / 'mystuff.db'}"
+    # ------------------------------------------------------------------
+
+    DATABASE_URL: str = (
+        "sqlite:///"
+        f"{PROJECT_ROOT / 'data' / 'db' / 'mystuff.db'}"
+    )
+
     POSTGRES_POOL_SIZE: int = 10
     POSTGRES_MAX_OVERFLOW: int = 20
 
     @computed_field
     @property
     def is_sqlite(self) -> bool:
-        """Return whether database is sqlite."""
-        return self.DATABASE_URL.startswith("sqlite")
+        """Return whether the database is SQLite."""
+        return self.DATABASE_URL.startswith(
+            "sqlite",
+        )
 
+    # ------------------------------------------------------------------
     # Security
+    # ------------------------------------------------------------------
+
     SECRET_KEY: str
+
     ALGORITHM: Literal["HS256"] = "HS256"
+
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 720
+
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # ------------------------------------------------------------------
     # Uploads
+    # ------------------------------------------------------------------
+
     UPLOAD_DIR: Path = DEFAULT_UPLOAD_DIR
+
     MAX_UPLOAD_SIZE_MB: int = 500
 
     @computed_field
     @property
     def max_upload_size_bytes(self) -> int:
-        """Return the maximum upload size bytes."""
-        return self.MAX_UPLOAD_SIZE_MB * 1024 * 1024
+        """Return upload limit in bytes."""
+        return (
+            self.MAX_UPLOAD_SIZE_MB
+            * 1024
+            * 1024
+        )
 
+    # ------------------------------------------------------------------
     # Storage
-    STORAGE_PROVIDER: Literal["local", "r2", "s3"] = "local"
+    # ------------------------------------------------------------------
+
+    STORAGE_PROVIDER: Literal[
+        "local",
+        "r2",
+        "s3",
+    ] = "local"
+
     S3_ACCESS_KEY_ID: str | None = None
+
     S3_SECRET_ACCESS_KEY: str | None = None
+
     S3_ENDPOINT_URL: str | None = None
+
     S3_BUCKET_NAME: str = "mystuff"
+
     S3_REGION: str = "auto"
+
     S3_CUSTOM_DOMAIN: str | None = None
 
+    # ------------------------------------------------------------------
     # Hugging Face
+    # ------------------------------------------------------------------
+
     HF_TOKEN: str | None = None
 
-    # Email / SMTP
+    # ------------------------------------------------------------------
+    # Email
+    # ------------------------------------------------------------------
+
     SMTP_HOST: str = "smtp.gmail.com"
+
     SMTP_PORT: int = 587
+
     SMTP_USER: str = ""
+
     SMTP_PASSWORD: str = ""
+
     SMTP_STARTTLS: bool = True
+
     SMTP_SSL_TLS: bool = False
+
     EMAIL_FROM: str = "noreply@mystuff.app"
+
     EMAIL_FROM_NAME: str = "My Stuff"
-    
+
     BREVO_API_KEY: str | None = None
 
-    # Features
+    # ------------------------------------------------------------------
+    # Feature flags
+    # ------------------------------------------------------------------
+
     DEMO_MODE: bool = True
 
+    # ------------------------------------------------------------------
     # CORS
+    # ------------------------------------------------------------------
+
     ALLOWED_ORIGINS: list[str] = [
         "http://localhost:5173",
         "https://localhost:5173",
         "https://mystuffs.vercel.app",
         "http://192.168.8.60:5173",
     ]
+
+    # ------------------------------------------------------------------
+    # Pydantic
+    # ------------------------------------------------------------------
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -93,6 +186,24 @@ class Settings(BaseSettings):
 
 settings = Settings()  # pyright: ignore[reportCallIssue]
 
+
+# ----------------------------------------------------------------------
+# Filesystem initialization
+# ----------------------------------------------------------------------
+
 if settings.is_sqlite:
-    _db_path = Path(settings.DATABASE_URL.removeprefix("sqlite:///"))
-    _db_path.parent.mkdir(parents=True, exist_ok=True)
+    db_path = Path(
+        settings.DATABASE_URL.removeprefix(
+            "sqlite:///",
+        ),
+    )
+
+    db_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+settings.UPLOAD_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)

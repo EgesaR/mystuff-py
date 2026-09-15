@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from datetime import timedelta
 
 from fastapi import BackgroundTasks
@@ -15,8 +17,8 @@ class ShareService:
 
     @staticmethod
     def create_share(
-        db: Session, *, owner_id: str, resource_type: ShareResourceType,
-        resource_id: str, target_username: str, permission: SharePermission,
+        db: Session, *, owner_id: UUID, resource_type: ShareResourceType,
+        resource_id: UUID, target_username: str, permission: SharePermission,
         background_tasks: BackgroundTasks
     ):
         target = UserRepository.get_by_username(db, target_username)
@@ -59,7 +61,7 @@ class ShareService:
         return share
 
     @staticmethod
-    def accept_share(db: Session, *, token: str, user_id: str):
+    def accept_share(db: Session, *, token: str, user_id: UUID):
         payload = decode_share_token(token)
         if payload is None:
             raise NotFoundError("Invalid or expired share link")
@@ -76,13 +78,13 @@ class ShareService:
         )
 
     @staticmethod
-    def list_incoming(db: Session, user_id: str):
+    def list_incoming(db: Session, user_id: UUID):
         return ShareRepository.get_incoming(db, user_id)
 
     @staticmethod
-    def list_for_resource(db: Session, resource_type: ShareResourceType, resource_id: str, owner_id: str):
+    def list_for_resource(db: Session, resource_type: ShareResourceType, resource_id: UUID, owner_id: UUID):
         return ShareRepository.get_for_resource(db, resource_type, resource_id, owner_id)
 
     @staticmethod
-    def has_access(db: Session, resource_type: ShareResourceType, resource_id: str, user_id: str) -> bool:
+    def has_access(db: Session, resource_type: ShareResourceType, resource_id: UUID, user_id: UUID) -> bool:
         return ShareRepository.get_accepted_for_resource(db, resource_type, resource_id, user_id) is not None

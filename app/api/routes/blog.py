@@ -1,6 +1,7 @@
 """Blog listing, reading, and developer authoring endpoints."""
 
 import logging
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -55,7 +56,7 @@ def list_all_posts(
     summary="Get a single blog post by id, including drafts (developer only)",
 )
 def get_post_admin(
-    post_id: str,
+    post_id: UUID,
     current_user: User = Depends(require_developer),
     db: Session = Depends(get_db),
 ) -> BlogPost:
@@ -118,7 +119,7 @@ def create_post(
     summary="Update a blog post (developer only)",
 )
 def update_post(
-    post_id: str,
+    post_id: UUID,
     payload: BlogPostUpdate,
     current_user: User = Depends(require_developer),
     db: Session = Depends(get_db),

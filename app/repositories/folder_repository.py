@@ -1,5 +1,7 @@
 """Module containing the repository layer for Folder model operations."""
 
+from uuid import UUID
+
 from sqlalchemy.orm import Session
 
 from app.models.folder import Folder
@@ -15,7 +17,7 @@ class FolderRepository(BaseRepository[Folder]):
     def get_user_folders(
         cls,
         db: Session,
-        user_id: str,
+        user_id: UUID,
     ) -> list[Folder]:
         """Retrieve user folders.
         
@@ -36,7 +38,7 @@ class FolderRepository(BaseRepository[Folder]):
     def get_root_folders(
         cls,
         db: Session,
-        user_id: str,
+        user_id: UUID,
     ) -> list[Folder]:
         """Retrieve root folders.
         
@@ -60,8 +62,8 @@ class FolderRepository(BaseRepository[Folder]):
     def get_folders(
         cls,
         db: Session,
-        user_id: str,
-        parent_id: str | None = None,
+        user_id: UUID,
+        parent_id: UUID | None = None,
     ) -> list[Folder]:
         """Retrieve folders.
         
@@ -88,7 +90,7 @@ class FolderRepository(BaseRepository[Folder]):
     def get_by_parent(
         cls,
         db: Session,
-        parent_id: str,
+        parent_id: UUID,
     ) -> list[Folder]:
         """Retrieve by parent.
         
@@ -109,8 +111,8 @@ class FolderRepository(BaseRepository[Folder]):
     def get_user_folder(
         cls,
         db: Session,
-        folder_id: str,
-        user_id: str,
+        folder_id: UUID,
+        user_id: UUID,
     ) -> Folder | None:
         """Retrieve user folder.
         
@@ -135,8 +137,8 @@ class FolderRepository(BaseRepository[Folder]):
     def folder_exists(
         cls,
         db: Session,
-        folder_id: str,
-        user_id: str,
+        folder_id: UUID,
+        user_id: UUID,
     ) -> bool:
         """Folder exists.
         
@@ -163,8 +165,8 @@ class FolderRepository(BaseRepository[Folder]):
         cls,
         db: Session,
         name: str,
-        user_id: str,
-        parent_id: str | None = None,
+        user_id: UUID,
+        parent_id: UUID | None = None,
     ) -> Folder | None:
         """Retrieve folder by name.
         

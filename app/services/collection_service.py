@@ -1,6 +1,7 @@
 """Business logic for collections — cross-folder file groupings."""
 
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -43,7 +44,7 @@ class CollectionService:
     @staticmethod
     def list_collections(
         db: Session,
-        user_id: str,
+        user_id: UUID,
     ) -> list[CollectionResponse]:
         """List collections.
         
@@ -60,7 +61,7 @@ class CollectionService:
     @staticmethod
     def create_collection(
         db: Session,
-        user_id: str,
+        user_id: UUID,
         name: str,
         color: str,
     ) -> Collection:
@@ -87,8 +88,8 @@ class CollectionService:
     @staticmethod
     def get_collection(
         db: Session,
-        collection_id: str,
-        user_id: str,
+        collection_id: UUID,
+        user_id: UUID,
     ) -> Collection:
         """Retrieve collection.
         
@@ -114,8 +115,8 @@ class CollectionService:
     @staticmethod
     def update_collection(
         db: Session,
-        collection_id: str,
-        user_id: str,
+        collection_id: UUID,
+        user_id: UUID,
         data: dict[str, Any],
     ) -> Collection:
         """Update collection.
@@ -144,8 +145,8 @@ class CollectionService:
     @staticmethod
     def delete_collection(
         db: Session,
-        collection_id: str,
-        user_id: str,
+        collection_id: UUID,
+        user_id: UUID,
     ) -> None:
         """Delete collection.
         
@@ -168,8 +169,8 @@ class CollectionService:
     @staticmethod
     def list_files(
         db: Session,
-        collection_id: str,
-        user_id: str,
+        collection_id: UUID,
+        user_id: UUID,
     ) -> list[FileResponse]:
         """List files.
         
@@ -201,9 +202,9 @@ class CollectionService:
     @staticmethod
     def add_file(
         db: Session,
-        collection_id: str,
-        file_id: str,
-        user_id: str,
+        collection_id: UUID,
+        file_id: UUID,
+        user_id: UUID,
     ) -> None:
         """Add file.
         
@@ -240,9 +241,9 @@ class CollectionService:
     @staticmethod
     def remove_file(
         db: Session,
-        collection_id: str,
-        file_id: str,
-        user_id: str,
+        collection_id: UUID,
+        file_id: UUID,
+        user_id: UUID,
     ) -> None:
         """Remove file.
         
@@ -270,8 +271,8 @@ class CollectionService:
     @staticmethod
     def get_file_collections(
         db: Session,
-        file_id: str,
-        user_id: str,
+        file_id: UUID,
+        user_id: UUID,
     ) -> list[Collection]:
         """Retrieve file collections.
         

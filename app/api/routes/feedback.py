@@ -1,6 +1,7 @@
 """Feedback submission and developer review endpoints."""
 
 import logging
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -36,19 +37,25 @@ async def submit_feedback(
     """Submit feedback as the current user.
 
     Args:
-        payload (FeedbackCreate): Request payload.
-        current_user (User): Authenticated user performing the action.
-        db (Session): Database session.
+        payload: Request payload.
+        current_user: Authenticated user performing the action.
+        db: Database session.
 
     Returns:
-        Feedback: Feedback result.
+        Feedback: Created feedback.
     """
-    feedback = FeedbackService.submit_feedback(
+    logger.info(
+        "Feedback submission from user %s: category=%s",
+        current_user.id,
+        payload.category,
+    )
+
+    feedback: Feedback = FeedbackService.submit_feedback(
         db,
         user_id=current_user.id,
         message=payload.message,
         category=payload.category,
-        attached_logs= payload.attached_logs
+        attached_logs=payload.attached_logs,
     )
 
     await feedback_manager.broadcast(
@@ -56,7 +63,6 @@ async def submit_feedback(
     )
 
     return feedback
-
 
 @router.get(
     "/mine",
@@ -76,7 +82,11 @@ def list_my_feedback(
     Returns:
         list[Feedback]: List of Feedback.
     """
-    return FeedbackService.list_my_feedback(db, user_id=current_user.id)
+    print(f"User id: {current_user.id}")
+    feedback_list = FeedbackService.list_my_feedback(
+        db, user_id=current_user.id)
+
+    return feedback_list
 
 
 @router.get(
@@ -106,7 +116,7 @@ def list_all_feedback(
     summary="Update feedback status (developer only)",
 )
 def update_feedback_status(
-    feedback_id: str,
+    feedback_id: UUID,
     payload: FeedbackStatusUpdate,
     current_user: User = Depends(require_developer),
     db: Session = Depends(get_db),

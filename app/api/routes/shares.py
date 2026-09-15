@@ -6,6 +6,7 @@ this router only handles HTTP contracts.
 """
 
 import logging
+from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -51,7 +52,7 @@ def list_incoming_shares(
 )
 def list_shares_for_resource(
     resource_type: ShareResourceType,
-    resource_id: str,
+    resource_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[Share]:

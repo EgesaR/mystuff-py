@@ -1,5 +1,7 @@
 """Repository for system logging operations."""
 
+from uuid import UUID
+
 from sqlalchemy.orm import Session
 
 from app.models.enums import LogLevel
@@ -28,7 +30,7 @@ class LogRepository(BaseRepository[SystemLog]):
 
     @classmethod
     def get_user_logs(
-        cls, db: Session, user_id: str, skip: int = 0, limit: int = 100
+        cls, db: Session, user_id: UUID, skip: int = 0, limit: int = 100
     ) -> list[SystemLog]:
         """Retrieve user logs.
         
@@ -56,7 +58,7 @@ class LogRepository(BaseRepository[SystemLog]):
         db: Session,
         mode: str | None = None,
         accuracy_type: str | None = None,
-        user_id: str | None = None,
+        user_id: UUID | None = None,
         limit: int = 500,
     ) -> list[SystemLog]:
         """Retrieve accuracy logs.

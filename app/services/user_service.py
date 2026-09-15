@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -14,7 +15,7 @@ class UserService:
     """Service class for managing user profile business logic."""
 
     @staticmethod
-    def get_by_id(db: Session, user_id: str) -> User:
+    def get_by_id(db: Session, user_id: UUID) -> User:
         """Retrieve by ID.
         
         Args:

@@ -1,5 +1,7 @@
 """Pydantic schemas for system logs."""
 
+from uuid import UUID
+
 from datetime import datetime
 from typing import Any
 
@@ -17,7 +19,7 @@ class SystemLogResponse(BaseModel):
     message: str
     source: str | None
     metadata_json: dict[str, Any] | None
-    user_id: str | None
+    user_id: UUID | None
     created_at: datetime
     updated_at: datetime
 

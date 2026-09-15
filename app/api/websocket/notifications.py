@@ -3,6 +3,8 @@
 import asyncio
 import logging
 from collections import defaultdict
+from uuid import UUID
+
 from typing import Any
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
@@ -18,9 +20,9 @@ class NotificationManager:
     """Tracks active notification WebSocket connections per user."""
 
     def __init__(self) -> None:
-        self._connections: dict[str, set[WebSocket]] = defaultdict(set)
+        self._connections: dict[UUID, set[WebSocket]] = defaultdict(set)
 
-    async def connect(self, websocket: WebSocket, user_id: str) -> None:
+    async def connect(self, websocket: WebSocket, user_id: UUID) -> None:
         await websocket.accept()
         self._connections[user_id].add(websocket)
         logger.info(
@@ -29,7 +31,7 @@ class NotificationManager:
             len(self._connections[user_id]),
         )
 
-    def disconnect(self, websocket: WebSocket, user_id: str) -> None:
+    def disconnect(self, websocket: WebSocket, user_id: UUID) -> None:
         conns = self._connections.get(user_id)
         if not conns:
             return
@@ -42,7 +44,7 @@ class NotificationManager:
             len(self._connections.get(user_id, [])),
         )
 
-    async def push(self, user_id: str, payload: dict[str, Any]) -> None:
+    async def push(self, user_id: UUID, payload: dict[str, Any]) -> None:
         """Send a payload to every active connection for a user."""
         dead: list[WebSocket] = []
         for ws in self._connections.get(user_id, []):

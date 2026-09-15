@@ -3,6 +3,8 @@
 Data access layer for File database entities handling relational operations.
 """
 
+from uuid import UUID
+
 from sqlalchemy.orm import Session
 
 from app.models.file import File
@@ -16,7 +18,7 @@ class FileRepository(BaseRepository[File]):
 
     @classmethod
     def get_files(
-        cls, db: Session, *, user_id: str, folder_id: str | None = None
+        cls, db: Session, *, user_id: UUID, folder_id: UUID | None = None
     ) -> list[File]:
         """Retrieve files.
         
@@ -34,7 +36,7 @@ class FileRepository(BaseRepository[File]):
         return query.all()
 
     @classmethod
-    def get_user_files(cls, db: Session, user_id: str) -> list[File]:
+    def get_user_files(cls, db: Session, user_id: UUID) -> list[File]:
         """Retrieve user files.
         
         Args:
@@ -52,7 +54,7 @@ class FileRepository(BaseRepository[File]):
 
     @classmethod
     def get_folder_files(
-        cls, db: Session, user_id: str, folder_id: str
+        cls, db: Session, user_id: UUID, folder_id: UUID
     ) -> list[File]:
         """Retrieve folder files.
         
@@ -75,7 +77,7 @@ class FileRepository(BaseRepository[File]):
 
     @classmethod
     def search_files(
-        cls, db: Session, user_id: str, query: str
+        cls, db: Session, user_id: UUID, query: str
     ) -> list[File]:
         """Search files.
         
@@ -98,7 +100,7 @@ class FileRepository(BaseRepository[File]):
 
     @classmethod
     def get_user_file(
-        cls, db: Session, file_id: str, user_id: str
+        cls, db: Session, file_id: UUID, user_id: UUID
     ) -> File | None:
         """Retrieve user file.
         
@@ -120,7 +122,7 @@ class FileRepository(BaseRepository[File]):
         )
 
     @classmethod
-    def file_exists(cls, db: Session, file_id: str, user_id: str) -> bool:
+    def file_exists(cls, db: Session, file_id: UUID, user_id: UUID) -> bool:
         """File exists.
         
         Args:
@@ -146,8 +148,8 @@ class FileRepository(BaseRepository[File]):
         cls,
         db: Session,
         *,
-        user_id: str,
-        folder_id: str | None,
+        user_id: UUID,
+        folder_id: UUID | None,
         name: str,
     ) -> File | None:
         """Retrieve by name in folder.

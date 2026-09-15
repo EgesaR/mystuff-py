@@ -1,5 +1,7 @@
 """Feedback service module managing business logic operations for feedback."""
 
+from uuid import UUID
+
 from sqlalchemy.orm import Session
 
 from app.core.errors import NotFoundError
@@ -12,7 +14,7 @@ class FeedbackService:
 
     @staticmethod
     def submit_feedback(
-        db: Session, user_id: str, message: str, category: str, attached_logs: str | None = None
+        db: Session, user_id: UUID, message: str, category: str, attached_logs: str | None = None
     ) -> Feedback:
         """Submit new feedback on behalf of a user.
 
@@ -46,7 +48,7 @@ class FeedbackService:
         return FeedbackRepository.get_all(db)
 
     @staticmethod
-    def list_my_feedback(db: Session, user_id: str) -> list[Feedback]:
+    def list_my_feedback(db: Session, user_id: UUID) -> list[Feedback]:
         """List feedback submitted by the current user.
 
         Args:
@@ -59,7 +61,7 @@ class FeedbackService:
         return FeedbackRepository.get_user_feedback(db, user_id)
 
     @staticmethod
-    def update_status(db: Session, feedback_id: str, status: str) -> Feedback:
+    def update_status(db: Session, feedback_id: UUID, status: str) -> Feedback:
         """Update the triage status of a feedback item. Developer-only.
 
         Args:

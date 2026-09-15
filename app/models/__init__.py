@@ -12,6 +12,8 @@ from app.models.folder import Folder
 from app.models.media import AudioNote, MediaItem, NoteMedia
 from app.models.note import Note
 from app.models.notification import Notification
+from app.models.onboarding import BetaSignup, UserOnboarding
+from app.models.pre_registration import PreRegistration
 from app.models.share import Share
 from app.models.system_log import SystemLog
 from app.models.user import User
@@ -37,5 +39,8 @@ __all__ = [
     "NoteComment",
     "BlogPost",
     "DocPage",
-    "ContactMessage"
+    "ContactMessage",
+    "UserOnboarding",
+    "BetaSignup",
+    "PreRegistration"
 ]

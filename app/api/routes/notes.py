@@ -2,6 +2,8 @@
 
 import logging
 
+from uuid import UUID
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -34,7 +36,7 @@ router = APIRouter()
     summary="List notes. Optionally filter by folder or search by text.",
 )
 def list_notes(
-    folder_id: str | None = Query(None),
+    folder_id: UUID | None = Query(None),
     q: str | None = Query(None, description="Full-text search query"),
     pinned_only: bool = Query(False),
     current_user: User = Depends(require_active_user),
@@ -83,7 +85,7 @@ def create_note(
     summary="Get a single note",
 )
 def get_note(
-    note_id: str,
+    note_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
@@ -106,7 +108,7 @@ def get_note(
     summary="Update note content, title, color, or folder",
 )
 def update_note(
-    note_id: str,
+    note_id: UUID,
     payload: NoteUpdate,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
@@ -135,7 +137,7 @@ def update_note(
     summary="Pin a note",
 )
 def pin_note(
-    note_id: str,
+    note_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
@@ -160,7 +162,7 @@ def pin_note(
     summary="Unpin a note",
 )
 def unpin_note(
-    note_id: str,
+    note_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Note:
@@ -185,8 +187,8 @@ def unpin_note(
     summary="Move note to a different folder (or root)",
 )
 def move_note(
-    note_id: str,
-    folder_id: str | None = Query(
+    note_id: UUID,
+    folder_id: UUID | None = Query(
         None, description="Target folder. Omit to move to root."
     ),
     current_user: User = Depends(require_active_user),
@@ -214,7 +216,7 @@ def move_note(
     summary="Delete a note",
 )
 def delete_note(
-    note_id: str,
+    note_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
@@ -238,7 +240,7 @@ def delete_note(
     summary="Upload an image and attach it to this note",
 )
 async def upload_note_image(
-    note_id: str,
+    note_id: UUID,
     file: UploadFile = File(...),
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),

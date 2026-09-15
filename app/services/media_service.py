@@ -1,5 +1,7 @@
 """Module containing logic and services for media items."""
 
+from uuid import UUID
+
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
@@ -18,7 +20,7 @@ class MediaService:
     """Orchestrates workflows for audio files and visual gallery items."""
 
     @staticmethod
-    def list_audio_notes(db: Session, user_id: str) -> list[AudioNote]:
+    def list_audio_notes(db: Session, user_id: UUID) -> list[AudioNote]:
         """List audio notes."""
         return AudioNoteRepository.get_user_audio_notes(db, user_id=user_id)
 
@@ -26,7 +28,7 @@ class MediaService:
     def upload_audio_note(
         db: Session,
         upload: UploadFile,
-        owner_id: str,
+        owner_id: UUID,
         title: str,
         duration_sec: float | None = None,
     ) -> AudioNote:
@@ -41,14 +43,14 @@ class MediaService:
         return AudioNoteRepository.create(db, obj_in=audio_data)
 
     @staticmethod
-    def get_audio_note(db: Session, note_id: str, user_id: str) -> AudioNote:
+    def get_audio_note(db: Session, note_id: UUID, user_id: UUID) -> AudioNote:
         """Retrieve audio note."""
         return AudioNoteRepository.get_secure_by_id(
             db, entity_id=note_id, user_id=user_id
         )
 
     @staticmethod
-    def delete_audio_note(db: Session, note_id: str, user_id: str) -> None:
+    def delete_audio_note(db: Session, note_id: UUID, user_id: UUID) -> None:
         """Delete audio note."""
         audio_note = AudioNoteRepository.get_secure_by_id(
             db, entity_id=note_id, user_id=user_id
@@ -57,7 +59,7 @@ class MediaService:
 
     @staticmethod
     def list_gallery(
-        db: Session, user_id: str, media_type: MediaType | None = None
+        db: Session, user_id: UUID, media_type: MediaType | None = None
     ) -> list[MediaItem]:
         """List gallery."""
         return MediaItemRepository.get_filtered_media(
@@ -68,7 +70,7 @@ class MediaService:
     def upload_gallery_item(
         db: Session,
         upload: UploadFile,
-        owner_id: str,
+        owner_id: UUID,
         title: str | None = None,
     ) -> MediaItem:
         """Upload gallery item."""
@@ -90,14 +92,14 @@ class MediaService:
         return MediaItemRepository.create(db, obj_in=item_data)
 
     @staticmethod
-    def get_gallery_item(db: Session, item_id: str, user_id: str) -> MediaItem:
+    def get_gallery_item(db: Session, item_id: UUID, user_id: UUID) -> MediaItem:
         """Retrieve gallery item."""
         return MediaItemRepository.get_secure_by_id(
             db, entity_id=item_id, user_id=user_id
         )
 
     @staticmethod
-    def delete_gallery_item(db: Session, item_id: str, user_id: str) -> None:
+    def delete_gallery_item(db: Session, item_id: UUID, user_id: UUID) -> None:
         """Delete gallery item."""
         media_item = MediaItemRepository.get_secure_by_id(
             db, entity_id=item_id, user_id=user_id
@@ -106,7 +108,7 @@ class MediaService:
 
     @staticmethod
     async def add_note_image(
-        db: Session, note_id: str, upload: UploadFile, user_id: str
+        db: Session, note_id: UUID, upload: UploadFile, user_id: UUID
     ) -> NoteMedia:
         """Upload an image and attach it to a note's media list.
 
@@ -132,7 +134,7 @@ class MediaService:
 
     @staticmethod
     def attach_media_to_note(
-        db: Session, note_id: str, media_item_id: str, user_id: str
+        db: Session, note_id: UUID, media_item_id: UUID, user_id: UUID
     ) -> NoteMedia:
         """Attach an existing gallery MediaItem to a note as a NoteMedia entry.
 

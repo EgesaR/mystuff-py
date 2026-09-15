@@ -1,6 +1,7 @@
 """User profile management endpoints."""
 
 import logging
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -23,12 +24,12 @@ def update_profile(
     db: Session = Depends(get_db),
 ) -> User:
     """Update profile.
-    
+
     Args:
         payload (UserUpdate): Request payload.
         current_user (User): Authenticated user performing the action.
         db (Session): Database session.
-    
+
     Returns:
         User: User data.
     """
@@ -45,11 +46,11 @@ def delete_account(
     db: Session = Depends(get_db),
 ) -> None:
     """Delete account.
-    
+
     Args:
         current_user (User): Authenticated user performing the action.
         db (Session): Database session.
-    
+
     Returns:
         None: None result.
     """
@@ -58,15 +59,15 @@ def delete_account(
 
 @router.get("/{user_id}", response_model=UserResponse, summary="Get public profile")
 def get_user(
-    user_id: str,
+    user_id: UUID,
     db: Session = Depends(get_db),
 ) -> User:
     """Retrieve user.
-    
+
     Args:
         user_id (str): Unique identifier of the user.
         db (Session): Database session.
-    
+
     Returns:
         User: User data.
     """

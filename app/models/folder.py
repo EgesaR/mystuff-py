@@ -1,6 +1,7 @@
 """Database model for folder organization."""
 
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -27,11 +28,11 @@ class Folder(Base, UUIDMixin, TimestampMixin):
         default="#6366f1",
     )
 
-    owner_id: Mapped[str] = mapped_column(
+    owner_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
     )
 
-    parent_id: Mapped[str | None] = mapped_column(
+    parent_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("folders.id", ondelete="CASCADE"),
         nullable=True,
     )

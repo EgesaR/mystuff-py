@@ -1,11 +1,13 @@
 """Database models for application system logging."""
 
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 from sqlalchemy import JSON, Enum, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+from app.database.types import GUID
 from app.models.base import TimestampMixin, UUIDMixin
 from app.models.enums import LogLevel
 
@@ -44,7 +46,8 @@ class SystemLog(Base, UUIDMixin, TimestampMixin):
         nullable=True,
     )
 
-    user_id: Mapped[str | None] = mapped_column(
+    user_id: Mapped[UUID | None] = mapped_column(
+        GUID(),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )

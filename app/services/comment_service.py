@@ -2,6 +2,8 @@
 
 import re
 
+from uuid import UUID
+
 from fastapi import BackgroundTasks
 from sqlalchemy.orm import Session
 
@@ -36,8 +38,8 @@ class CommentService:
     @staticmethod
     def list_comments(
         db: Session,
-        note_id: str,
-        user_id: str
+        note_id: UUID,
+        user_id: UUID
     ) -> list[CommentResponse]:
         """List comments for a note the user can access (owner or shared)."""
         NoteService.get_note(db, note_id, user_id)
@@ -48,8 +50,8 @@ class CommentService:
     @staticmethod
     def create_comment(
         db: Session,
-        note_id: str,
-        author_id: str,
+        note_id: UUID,
+        author_id: UUID,
         body: str,
         background_tasks: BackgroundTasks
     ) -> CommentResponse:
@@ -60,7 +62,7 @@ class CommentService:
             db, obj_in={"note_id": note_id, "author_id": author_id, "body": body}
         )
 
-        notified: set[str] = {author_id}
+        notified: set[UUID] = {author_id}
 
         if note.owner_id not in notified:
             NotificationService.create(
@@ -93,7 +95,7 @@ class CommentService:
         return CommentService.to_response(comment)
 
     @staticmethod
-    def delete_comment(db: Session, comment_id: str, user_id: str) -> None:
+    def delete_comment(db: Session, comment_id: UUID, user_id: UUID) -> None:
         """Delete a comment. Only its author or the note's owner may delete it."""
         comment = CommentRepository.get(db, comment_id)
         if not comment:

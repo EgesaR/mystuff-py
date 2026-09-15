@@ -7,6 +7,8 @@ via an *accepted* Share row for that folder — VIEW is enough to read
 (list_folders, get_folder_tree), but update/delete require EDIT.
 """
 
+from uuid import UUID
+
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -22,7 +24,7 @@ class FolderService:
 
     @staticmethod
     def _get_accessible_folder(
-        db: Session, folder_id: str, user_id: str, *, require_edit: bool = False
+        db: Session, folder_id: UUID, user_id: UUID, *, require_edit: bool = False
     ) -> Any:
         """Fetch a folder the user owns or has an accepted share for.
 
@@ -56,10 +58,10 @@ class FolderService:
     @staticmethod
     def create_folder(
         db: Session,
-        user_id: str,
+        user_id: UUID,
         name: str,
         color: str | None = None,
-        parent_id: str | None = None,
+        parent_id: UUID | None = None,
     ) -> Any:
         """Create folder."""
         existing = FolderRepository.get_folder_by_name(
@@ -79,7 +81,7 @@ class FolderService:
 
     @staticmethod
     def list_folders(
-        db: Session, user_id: str, parent_id: str | None = None
+        db: Session, user_id: UUID, parent_id: UUID | None = None
     ) -> list[Any]:
         """List folders owned by the user."""
         return FolderRepository.get_folders(
@@ -87,7 +89,7 @@ class FolderService:
         )
 
     @staticmethod
-    def list_shared_folders(db: Session, user_id: str) -> list[Any]:
+    def list_shared_folders(db: Session, user_id: UUID) -> list[Any]:
         """List folders shared with the user (accepted invites only)."""
         shares = [
             s for s in ShareRepository.get_incoming(db, user_id)
@@ -99,7 +101,7 @@ class FolderService:
 
     @staticmethod
     def update_folder(
-        db: Session, folder_id: str, user_id: str, data: dict[str, Any]
+        db: Session, folder_id: UUID, user_id: UUID, data: dict[str, Any]
     ) -> Any:
         """Update folder. Requires ownership or an EDIT share."""
         folder = FolderService._get_accessible_folder(
@@ -110,7 +112,7 @@ class FolderService:
         )
 
     @staticmethod
-    def delete_folder(db: Session, folder_id: str, user_id: str) -> None:
+    def delete_folder(db: Session, folder_id: UUID, user_id: UUID) -> None:
         """Delete folder. Requires ownership or an EDIT share."""
         folder = FolderService._get_accessible_folder(
             db, folder_id, user_id, require_edit=True
@@ -118,12 +120,12 @@ class FolderService:
         FolderRepository.delete(db, db_obj=folder)
 
     @staticmethod
-    def get_user_folders(db: Session, user_id: str) -> list[Any]:
+    def get_user_folders(db: Session, user_id: UUID) -> list[Any]:
         """Retrieve all folders belonging to a user."""
         return FolderRepository.get_user_folders(db, user_id)
 
     @staticmethod
-    def get_folder_tree(db: Session, folder_id: str, user_id: str) -> Any:
+    def get_folder_tree(db: Session, folder_id: UUID, user_id: UUID) -> Any:
         """Retrieve a folder with its full nested children tree.
 
         Access via ownership or an accepted (VIEW or EDIT) share.
@@ -133,7 +135,7 @@ class FolderService:
         return folder
 
     @staticmethod
-    def _build_children(db: Session, parent_id: str) -> list[Any]:
+    def _build_children(db: Session, parent_id: UUID) -> list[Any]:
         """Recursively attach nested children to every folder in the subtree.
 
         Args:

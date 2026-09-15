@@ -2,6 +2,8 @@
 
 import logging
 from collections import defaultdict
+from uuid import UUID
+
 from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
@@ -20,7 +22,7 @@ class ConnectionManager:
             None: None result.
         """
         self.admin_connections: list[WebSocket] = []
-        self.user_connections: dict[str, list[WebSocket]] = defaultdict(list)
+        self.user_connections: defaultdict[UUID, list[WebSocket]] = defaultdict(list)
 
     async def connect_admin(self, websocket: WebSocket) -> None:
         """Connect admin.
@@ -36,7 +38,7 @@ class ConnectionManager:
         logger.debug("telemetry: admin connected (total=%d)",
                      len(self.admin_connections))
 
-    async def connect_user(self, websocket: WebSocket, user_id: str) -> None:
+    async def connect_user(self, websocket: WebSocket, user_id: UUID) -> None:
         """Connect user.
         
         Args:
@@ -63,7 +65,7 @@ class ConnectionManager:
         logger.debug("telemetry: admin disconnected (total=%d)",
                      len(self.admin_connections))
 
-    def disconnect_user(self, websocket: WebSocket, user_id: str) -> None:
+    def disconnect_user(self, websocket: WebSocket, user_id: UUID) -> None:
         """Disconnect user.
         
         Args:
@@ -100,7 +102,7 @@ class ConnectionManager:
         for ws in dead:
             self.disconnect_admin(ws)
 
-    async def send_to_user(self, user_id: str, payload: dict[str, Any]) -> None:
+    async def send_to_user(self, user_id: UUID, payload: dict[str, Any]) -> None:
         """Send to user.
         
         Args:

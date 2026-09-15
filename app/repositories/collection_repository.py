@@ -1,6 +1,7 @@
 """Repository for collections and their file membership."""
 
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -30,7 +31,7 @@ class CollectionRepository:
         return collection
 
     @staticmethod
-    def get(db: Session, collection_id: str) -> Collection | None:
+    def get(db: Session, collection_id: UUID) -> Collection | None:
         """Retrieve.
         
         Args:
@@ -44,7 +45,7 @@ class CollectionRepository:
 
     @staticmethod
     def get_user_collection(
-        db: Session, collection_id: str, user_id: str
+        db: Session, collection_id: UUID, user_id: UUID
     ) -> Collection | None:
         """Retrieve user collection.
         
@@ -62,7 +63,7 @@ class CollectionRepository:
         return db.execute(stmt).scalar_one_or_none()
 
     @staticmethod
-    def get_user_collections(db: Session, user_id: str) -> list[Collection]:
+    def get_user_collections(db: Session, user_id: UUID) -> list[Collection]:
         """Retrieve user collections.
         
         Args:
@@ -81,9 +82,9 @@ class CollectionRepository:
 
     @staticmethod
     def update(
-        db: Session, 
-        db_obj: Collection, 
-        update_data: dict[str, Any]
+        db: Session,
+        db_obj: Collection,
+        update_data: dict[str, Any],
     ) -> Collection:
         """Update.
         
@@ -118,7 +119,7 @@ class CollectionRepository:
         db.commit()
 
     @staticmethod
-    def get_files(db: Session, collection_id: str) -> list[File]:
+    def get_files(db: Session, collection_id: UUID) -> list[File]:
         """Retrieve files.
         
         Args:
@@ -137,7 +138,7 @@ class CollectionRepository:
         return list(db.execute(stmt).scalars().all())
 
     @staticmethod
-    def file_count(db: Session, collection_id: str) -> int:
+    def file_count(db: Session, collection_id: UUID) -> int:
         """File count.
         
         Args:
@@ -153,7 +154,7 @@ class CollectionRepository:
         return len(list(db.execute(stmt).scalars().all()))
 
     @staticmethod
-    def is_member(db: Session, collection_id: str, file_id: str) -> bool:
+    def is_member(db: Session, collection_id: UUID, file_id: UUID) -> bool:
         """Return whether member.
         
         Args:
@@ -171,7 +172,7 @@ class CollectionRepository:
         return db.execute(stmt).scalar_one_or_none() is not None
 
     @staticmethod
-    def add_file(db: Session, collection_id: str, file_id: str) -> CollectionFile | None:
+    def add_file(db: Session, collection_id: UUID, file_id: UUID) -> CollectionFile | None:
         """Add file.
         
         Args:
@@ -190,7 +191,7 @@ class CollectionRepository:
         return link
 
     @staticmethod
-    def remove_file(db: Session, collection_id: str, file_id: str) -> bool:
+    def remove_file(db: Session, collection_id: UUID, file_id: UUID) -> bool:
         """Remove file.
         
         Args:
@@ -214,7 +215,7 @@ class CollectionRepository:
 
     @staticmethod
     def get_file_collections(
-        db: Session, file_id: str, user_id: str
+        db: Session, file_id: UUID, user_id: UUID
     ) -> list[Collection]:
         """Retrieve file collections.
         

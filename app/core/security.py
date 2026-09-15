@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from uuid import UUID
 
 import bcrypt
 from jose import JWTError, jwt
@@ -47,17 +48,17 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def create_access_token(
-    subject: str,
+    subject: UUID,
     expires_delta: timedelta | None = None,
 ) -> str:
     """Create a new access token.
 
     Args:
-        subject (str): Subject string.
-        expires_delta (timedelta | None): The expires delta.
+        subject: User UUID.
+        expires_delta: Optional token lifetime override.
 
     Returns:
-        str: Processed string result.
+        Encoded JWT string.
     """
     if expires_delta is None:
         expires_delta = timedelta(
@@ -67,7 +68,7 @@ def create_access_token(
     now = datetime.now(UTC)
 
     payload: dict[str, Any] = {
-        "sub": subject,
+        "sub": str(subject),
         "iat": now,
         "exp": now + expires_delta,
         "type": "access",
@@ -81,17 +82,17 @@ def create_access_token(
 
 
 def create_refresh_token(
-    subject: str,
+    subject: UUID,
     expires_delta: timedelta | None = None,
 ) -> str:
     """Create a new refresh token.
 
     Args:
-        subject (str): Subject string.
-        expires_delta (timedelta | None): The expires delta.
+        subject: User UUID.
+        expires_delta: Optional token lifetime override.
 
     Returns:
-        str: Processed string result.
+        Encoded JWT string.
     """
     if expires_delta is None:
         expires_delta = timedelta(
@@ -101,7 +102,7 @@ def create_refresh_token(
     now = datetime.now(UTC)
 
     payload: dict[str, Any] = {
-        "sub": subject,
+        "sub": str(subject),
         "iat": now,
         "exp": now + expires_delta,
         "type": "refresh",
@@ -116,11 +117,11 @@ def create_refresh_token(
 
 def create_share_token(
     *,
-    owner_id: str,
+    owner_id: UUID,
     resource_type: str,
-    resource_id: str,
+    resource_id: UUID,
     permission: str,
-    target_user_id: str | None = None,
+    target_user_id: UUID | None = None,
     expires_delta: timedelta | None = None
 ) -> str:
     now = datetime.now(UTC)

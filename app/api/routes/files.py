@@ -6,6 +6,8 @@ Pattern: router validates HTTP contract → delegates all logic to service layer
 
 import logging
 
+from uuid import UUID
+
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -45,7 +47,7 @@ router = APIRouter()
     summary="List folders (root or children of a parent)",
 )
 def list_folders(
-    parent_id: str | None = Query(
+    parent_id: UUID | None = Query(
         None, description="Parent folder ID. Omit for root folders."
     ),
     current_user: User = Depends(require_active_user),
@@ -113,7 +115,7 @@ def create_folder(
     summary="Rename or recolor a folder",
 )
 def update_folder(
-    folder_id: str,
+    folder_id: UUID,
     payload: FolderUpdate,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
@@ -152,7 +154,7 @@ def update_folder(
     summary="Delete a folder (cascades to children)",
 )
 def delete_folder(
-    folder_id: str,
+    folder_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
@@ -186,7 +188,7 @@ def delete_folder(
     summary="Get a folder with its full nested children tree",
 )
 def folder_tree(
-    folder_id: str,
+    folder_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> FolderResponse:
@@ -225,7 +227,7 @@ def folder_tree(
     summary="List files (optionally filtered by folder)",
 )
 def list_files(
-    folder_id: str | None = Query(None),
+    folder_id: UUID | None = Query(None),
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[FileResponse]:
@@ -253,7 +255,7 @@ def list_files(
 async def upload_file(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    folder_id: str | None = Form(None),
+    folder_id: UUID | None = Form(None),
     name: str | None = Form(None),
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),

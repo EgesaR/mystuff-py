@@ -1,4 +1,6 @@
 # app/services/file_service.py
+from uuid import UUID
+
 from typing import Any
 
 from fastapi import UploadFile
@@ -13,7 +15,7 @@ from app.services.storage_service import StorageService
 class FileService:
     @staticmethod
     def list_files(
-        db: Session, user_id: str, folder_id: str | None = None
+        db: Session, user_id: UUID, folder_id: UUID | None = None
     ) -> list[Any]:
         """List files.
 
@@ -32,7 +34,7 @@ class FileService:
         db: Session,
         upload: UploadFile,
         owner: User,
-        folder_id: str | None = None,
+        folder_id: UUID | None = None,
         display_name: str | None = None,
     ) -> Any:
         """Upload file.
@@ -67,7 +69,7 @@ class FileService:
         )
 
     @staticmethod
-    def get_file(db: Session, file_id: str, user_id: str) -> Any:
+    def get_file(db: Session, file_id: UUID, user_id: UUID) -> Any:
         """Retrieve file.
 
         Args:
@@ -91,7 +93,7 @@ class FileService:
 
     @staticmethod
     def move_file(
-        db: Session, file_id: str, user_id: str, folder_id: str | None
+        db: Session, file_id: UUID, user_id: UUID, folder_id: UUID | None
     ) -> Any:
         """Move file.
 
@@ -110,7 +112,7 @@ class FileService:
         )
 
     @staticmethod
-    async def delete_file(db: Session, file_id: str, user_id: str) -> None:
+    async def delete_file(db: Session, file_id: UUID, user_id: UUID) -> None:
         """Delete file.
 
         Args:

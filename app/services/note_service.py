@@ -2,6 +2,8 @@
 
 import re
 from html import unescape
+from uuid import UUID
+
 from typing import Any, cast
 
 from sqlalchemy.orm import Session
@@ -36,7 +38,7 @@ class NoteService:
 
     @staticmethod
     def _get_accessible_note(
-        db: Session, note_id: str, user_id: str, *, require_edit: bool = False
+        db: Session, note_id: UUID, user_id: UUID, *, require_edit: bool = False
     ) -> Note:
         """Fetch a note the user owns or has an accepted share for.
 
@@ -77,7 +79,7 @@ class NoteService:
         return note
     
     @staticmethod
-    def require_edit_access(db: Session, note_id: str, user_id: str) -> Note:
+    def require_edit_access(db: Session, note_id: UUID, user_id: UUID) -> Note:
         """Fetch a note the user can edit — ownership or an EDIT share.
 
         Public entry point for other services (e.g. MediaService) that need
@@ -98,7 +100,7 @@ class NoteService:
 
     @staticmethod
     def list_notes(
-        db: Session, user_id: str, folder_id: str | None = None
+        db: Session, user_id: UUID, folder_id: UUID | None = None
     ) -> list[Note]:
         """List notes for the current user.
 
@@ -113,7 +115,7 @@ class NoteService:
         return NoteRepository.get_user_notes(db, user_id, folder_id)
 
     @staticmethod
-    def list_pinned(db: Session, user_id: str) -> list[Note]:
+    def list_pinned(db: Session, user_id: UUID) -> list[Note]:
         """List pinned.
 
         Args:
@@ -126,7 +128,7 @@ class NoteService:
         return NoteRepository.get_pinned_notes(db, user_id)
 
     @staticmethod
-    def search_notes(db: Session, user_id: str, query: str) -> list[Note]:
+    def search_notes(db: Session, user_id: UUID, query: str) -> list[Note]:
         """Search notes.
 
         Args:
@@ -142,10 +144,10 @@ class NoteService:
     @staticmethod
     def create_note(
         db: Session,
-        owner_id: str,
+        owner_id: UUID,
         title: str,
         content: dict[str, Any] | None,
-        folder_id: str | None,
+        folder_id: UUID | None,
         color: str | None,
     ) -> Note:
         """Create a new note.
@@ -173,7 +175,7 @@ class NoteService:
         return NoteRepository.create(db, obj_in=note_data)
 
     @staticmethod
-    def get_note(db: Session, note_id: str, user_id: str) -> Note:
+    def get_note(db: Session, note_id: UUID, user_id: UUID) -> Note:
         """Retrieve a specific note.
 
         Args:
@@ -188,7 +190,7 @@ class NoteService:
 
     @staticmethod
     def update_note(
-        db: Session, note_id: str, user_id: str, data: dict[str, Any]
+        db: Session, note_id: UUID, user_id: UUID, data: dict[str, Any]
     ) -> Note:
         """Update an existing note.
 
@@ -223,7 +225,7 @@ class NoteService:
 
     @staticmethod
     def set_pinned(
-        db: Session, note_id: str, user_id: str, pinned: bool
+        db: Session, note_id: UUID, user_id: UUID, pinned: bool
     ) -> Note:
         """Pin or unpin a note.
 
@@ -244,7 +246,7 @@ class NoteService:
 
     @staticmethod
     def move_note(
-        db: Session, note_id: str, user_id: str, folder_id: str | None
+        db: Session, note_id: UUID, user_id: UUID, folder_id: UUID | None
     ) -> Note:
         """Move a note to a different folder.
 
@@ -262,7 +264,7 @@ class NoteService:
         )
 
     @staticmethod
-    def delete_note(db: Session, note_id: str, user_id: str) -> None:
+    def delete_note(db: Session, note_id: UUID, user_id: UUID) -> None:
         """Delete a note.
 
         Only the owner of a note may delete it. Shared users, including those

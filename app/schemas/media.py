@@ -1,6 +1,7 @@
 """Pydantic models for media and audio note items."""
 
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -10,7 +11,7 @@ from app.models.enums import NoteMediaType
 class NoteMediaResponse(BaseModel):
     """Schema for generic media items attached to a note."""
 
-    id: str
+    id: UUID
 
     url: str
 
@@ -29,7 +30,7 @@ class NoteMediaResponse(BaseModel):
 class AudioNoteResponse(BaseModel):
     """Schema for audio note details."""
 
-    id: str
+    id: UUID
 
     title: str
 
@@ -53,7 +54,7 @@ class AudioNoteResponse(BaseModel):
 class MediaItemResponse(BaseModel):
     """Schema for structured media items such as images or videos."""
 
-    id: str
+    id: UUID
 
     title: str | None
 

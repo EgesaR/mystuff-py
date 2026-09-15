@@ -1,6 +1,7 @@
 """Repository for authentication and password reset token operations."""
 
 from datetime import UTC, datetime
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -16,7 +17,7 @@ class RefreshTokenRepository(BaseRepository[RefreshToken]):
 
     @classmethod
     def create_token(
-        cls, db: Session, *, token: str, user_id: str, expires_at: datetime
+        cls, db: Session, *, token: str, user_id: UUID, expires_at: datetime
     ) -> RefreshToken:
         """Create token.
         
@@ -83,7 +84,7 @@ class RefreshTokenRepository(BaseRepository[RefreshToken]):
             raise
 
     @classmethod
-    def revoke_all_user_tokens(cls, db: Session, user_id: str) -> int:
+    def revoke_all_user_tokens(cls, db: Session, user_id: UUID) -> int:
         """Revoke all user tokens.
         
         Args:
@@ -114,7 +115,7 @@ class PasswordResetRepository(BaseRepository[PasswordResetToken]):
 
     @classmethod
     def create_token(
-        cls, db: Session, *, token: str, user_id: str, expires_at: datetime
+        cls, db: Session, *, token: str, user_id: UUID, expires_at: datetime
     ) -> PasswordResetToken:
         """Create token.
         

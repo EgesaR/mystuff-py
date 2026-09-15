@@ -1,7 +1,10 @@
 # app/services/notification_service.py
 """Business logic for creating, listing, and mutating notifications."""
 
+from uuid import UUID
+
 from typing import Any
+from uuid import UUID
 
 from fastapi import BackgroundTasks
 from sqlalchemy.orm import Session
@@ -18,7 +21,7 @@ class NotificationService:
     @staticmethod
     def list_notifications(
         db: Session,
-        user_id: str,
+        user_id: UUID,
         unread_only: bool = False,
         archived: bool = False,
         limit: int = 50,
@@ -47,7 +50,7 @@ class NotificationService:
         )
 
     @staticmethod
-    def unread_count(db: Session, user_id: str) -> int:
+    def unread_count(db: Session, user_id: UUID) -> int:
         """Count unread notifications for a user.
         
         Args:
@@ -62,13 +65,13 @@ class NotificationService:
     @staticmethod
     def create(
         db: Session,
-        recipient_id: str,
+        recipient_id: UUID,
         title: str,
         message: str,
         notification_type: NotificationType,
         background_tasks: BackgroundTasks,
         link: str | None = None,
-        sender_id: str | None = None,
+        sender_id: UUID | None = None,
     ) -> Any:
         """Create.
         
@@ -115,7 +118,7 @@ class NotificationService:
         return notification
 
     @staticmethod
-    def mark_read(db: Session, notification_id: str, user_id: str) -> Any:
+    def mark_read(db: Session, notification_id: UUID, user_id: UUID) -> Any:
         """Mark a notification as read.
         
         Args:
@@ -136,7 +139,7 @@ class NotificationService:
         )
 
     @staticmethod
-    def mark_all_read(db: Session, user_id: str) -> int:
+    def mark_all_read(db: Session, user_id: UUID) -> int:
         """Mark all notifications as read.
         
         Args:
@@ -150,7 +153,7 @@ class NotificationService:
 
     @staticmethod
     def set_archived(
-        db: Session, notification_id: str, user_id: str, archived: bool
+        db: Session, notification_id: UUID, user_id: UUID, archived: bool
     ) -> Any:
         """Set archived.
         
@@ -173,7 +176,7 @@ class NotificationService:
         )
 
     @staticmethod
-    def bulk_action(db: Session, ids: list[str], user_id: str, action: str) -> int:
+    def bulk_action(db: Session, ids: list[UUID], user_id: UUID, action: str) -> int:
         """Bulk action.
         
         Args:
@@ -197,7 +200,7 @@ class NotificationService:
         )
 
     @staticmethod
-    def delete(db: Session, notification_id: str, user_id: str) -> None:
+    def delete(db: Session, notification_id: UUID, user_id: UUID) -> None:
         """Delete.
         
         Args:

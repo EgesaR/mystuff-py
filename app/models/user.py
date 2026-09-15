@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.models.media import AudioNote, MediaItem
     from app.models.note import Note
     from app.models.notification import Notification
+    from app.models.onboarding import BetaSignup, UserOnboarding
     from app.models.system_log import SystemLog
     from app.models.workspace import WorkspaceState
 
@@ -127,4 +128,27 @@ class User(Base, UUIDMixin, TimestampMixin):
     )
 
     is_developer: Mapped[bool] = mapped_column(
-        Boolean, default=False, server_default=false())
+        Boolean,
+        default=False,
+        server_default=false(),
+        nullable=False,
+    )
+
+    onboarding: Mapped["UserOnboarding | None"] = relationship(
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+    beta_signup: Mapped["BetaSignup | None"] = relationship(
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+    is_admin: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        server_default=false(),
+        nullable=False,
+    )

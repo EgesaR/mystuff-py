@@ -4,6 +4,7 @@ Media endpoints for handling voice notes and gallery files.
 
 import logging
 from typing import Any
+from uuid import UUID
 
 from fastapi import (
     APIRouter,
@@ -45,11 +46,11 @@ def list_audio_notes(
     db: Session = Depends(get_db),
 ) -> list[Any]:
     """List audio notes.
-    
+
     Args:
         current_user (User): Authenticated user performing the action.
         db (Session): Database session.
-    
+
     Returns:
         list[Any]: List of Any.
     """
@@ -70,14 +71,14 @@ async def upload_audio_note(
     db: Session = Depends(get_db),
 ) -> Any:
     """Upload audio note.
-    
+
     Args:
         file (UploadFile): The file.
         title (str): Title string.
         duration_sec (float | None): The duration sec.
         current_user (User): Authenticated user performing the action.
         db (Session): Database session.
-    
+
     Returns:
         Any: Result value.
     """
@@ -108,17 +109,17 @@ async def upload_audio_note(
     summary="Get a single audio note",
 )
 def get_audio_note(
-    note_id: str,
+    note_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Any:
     """Retrieve audio note.
-    
+
     Args:
         note_id (str): Unique identifier of the note.
         current_user (User): Authenticated user performing the action.
         db (Session): Database session.
-    
+
     Returns:
         Any: Result value.
     """
@@ -142,17 +143,17 @@ def get_audio_note(
     summary="Delete an audio note",
 )
 def delete_audio_note(
-    note_id: str,
+    note_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
     """Delete audio note.
-    
+
     Args:
         note_id (str): Unique identifier of the note.
         current_user (User): Authenticated user performing the action.
         db (Session): Database session.
-    
+
     Returns:
         None: None result.
     """
@@ -188,12 +189,12 @@ def list_gallery(
     db: Session = Depends(get_db),
 ) -> list[Any]:
     """List gallery.
-    
+
     Args:
         media_type (MediaType | None): The media type.
         current_user (User): Authenticated user performing the action.
         db (Session): Database session.
-    
+
     Returns:
         list[Any]: List of Any.
     """
@@ -215,13 +216,13 @@ async def upload_gallery_item(
     db: Session = Depends(get_db),
 ) -> Any:
     """Upload gallery item.
-    
+
     Args:
         file (UploadFile): The file.
         title (str | None): The title.
         current_user (User): Authenticated user performing the action.
         db (Session): Database session.
-    
+
     Returns:
         Any: Result value.
     """
@@ -245,17 +246,17 @@ async def upload_gallery_item(
     summary="Get a single gallery item",
 )
 def get_gallery_item(
-    item_id: str,
+    item_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> Any:
     """Retrieve gallery item.
-    
+
     Args:
         item_id (str): Unique identifier of the target resource.
         current_user (User): Authenticated user performing the action.
         db (Session): Database session.
-    
+
     Returns:
         Any: Result value.
     """
@@ -279,17 +280,17 @@ def get_gallery_item(
     summary="Delete a gallery item",
 )
 def delete_gallery_item(
-    item_id: str,
+    item_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
     """Delete gallery item.
-    
+
     Args:
         item_id (str): Unique identifier of the target resource.
         current_user (User): Authenticated user performing the action.
         db (Session): Database session.
-    
+
     Returns:
         None: None result.
     """

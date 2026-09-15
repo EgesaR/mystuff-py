@@ -24,6 +24,7 @@ to User yourself and flip `owner: Mapped["User"] = relationship()` below to
 """
 
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -46,7 +47,7 @@ class Collection(Base, UUIDMixin, TimestampMixin):
     name: Mapped[str] = mapped_column(String(255))
     color: Mapped[str] = mapped_column(String(20), default="#6366f1")
 
-    owner_id: Mapped[str] = mapped_column(
+    owner_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
     )
 
@@ -62,10 +63,10 @@ class CollectionFile(Base, UUIDMixin, TimestampMixin):
                          name="uq_collection_file"),
     )
 
-    collection_id: Mapped[str] = mapped_column(
+    collection_id: Mapped[UUID] = mapped_column(
         ForeignKey("collections.id", ondelete="CASCADE"),
     )
-    file_id: Mapped[str] = mapped_column(
+    file_id: Mapped[UUID] = mapped_column(
         ForeignKey("files.id", ondelete="CASCADE"),
     )
 

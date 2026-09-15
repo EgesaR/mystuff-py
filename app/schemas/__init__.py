@@ -38,6 +38,7 @@ from app.schemas.media import (
     NoteMediaResponse,
 )
 from app.schemas.note import NoteCreate, NoteResponse, NoteUpdate
+from app.schemas.onboarding import BetaPayload, BetaState, FeedbackState, FeedbackStateResponse, OnboardingState, OnboardingUserResponse, StepUpdate, VersionPayload
 from app.schemas.token import TokenPair
 from app.schemas.user import UserResponse, UserUpdate
 
@@ -97,4 +98,14 @@ __all__ = [
     # Contact
     "ContactMessageCreate",
     "ContactMessageResponse",
+
+    # Onboarding
+    "BetaState", 
+    "FeedbackState", 
+    "OnboardingState", 
+    "OnboardingUserResponse", 
+    "StepUpdate", 
+    "VersionPayload", 
+    "BetaPayload", 
+    "FeedbackStateResponse"
 ]

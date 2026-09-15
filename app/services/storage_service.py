@@ -3,6 +3,7 @@
 import mimetypes
 import uuid
 from pathlib import Path
+from uuid import UUID
 
 from fastapi import HTTPException, UploadFile
 
@@ -60,7 +61,7 @@ class StorageService:
     @staticmethod
     async def upload_file(
         file: UploadFile,
-        owner_id: str,
+        owner_id: UUID,
         sub_folder: str | None = None,
     ) -> UploadResult:
         """Upload file.

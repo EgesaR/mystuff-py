@@ -1,11 +1,13 @@
 """Blog post database model definition module."""
 from datetime import datetime
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+from app.database.types import GUID
 from app.models.base import TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
@@ -31,6 +33,8 @@ class BlogPost(Base, UUIDMixin, TimestampMixin):
     published_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True)
 
-    author_id: Mapped[str] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"))
+    author_id: Mapped[UUID] = mapped_column(
+        GUID(),
+        ForeignKey("users.id", ondelete="CASCADE"),
+    )
     author: Mapped["User"] = relationship()

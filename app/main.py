@@ -20,6 +20,9 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.requests import Request
 
+from app.api.routes.admin.pre_registration import (
+    router as admin_pre_registration_router,
+)
 from app.api.routes.auth import router as auth_router
 from app.api.routes.blog import router as blog_router
 from app.api.routes.collections import router as collection_router
@@ -33,6 +36,8 @@ from app.api.routes.logs import router as logs_router
 from app.api.routes.media import router as media_router
 from app.api.routes.notes import router as notes_router
 from app.api.routes.notifications import router as notifications_router
+from app.api.routes.onboarding import router as onboarding_router
+from app.api.routes.pre_registration import router as pre_registration_router
 from app.api.routes.shares import router as shares_router
 from app.api.routes.users import router as users_router
 from app.api.routes.workspace import router as workspace_router
@@ -164,6 +169,16 @@ app.include_router(
     prefix="/api/contact",
     tags=["Contact"],
 )
+
+app.include_router(
+    onboarding_router,
+    prefix="/api/users",
+    tags=["Onboarding"],
+)
+
+app.include_router(pre_registration_router,prefix="/api/pre-register",
+    tags=["Pre-registration"],)
+app.include_router(admin_pre_registration_router)
 
 # WebSockets
 app.include_router(dictate_ws_router)

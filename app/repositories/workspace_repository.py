@@ -1,5 +1,7 @@
 """Repository for workspace state persistence."""
 
+from uuid import UUID
+
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -12,7 +14,7 @@ class WorkspaceRepository(BaseRepository[WorkspaceState]):
     model = WorkspaceState
 
     @classmethod
-    def get_by_user(cls, db: Session, user_id: str) -> WorkspaceState | None:
+    def get_by_user(cls, db: Session, user_id: UUID) -> WorkspaceState | None:
         """Retrieve by user.
         
         Args:
@@ -25,7 +27,7 @@ class WorkspaceRepository(BaseRepository[WorkspaceState]):
         return db.query(cls.model).filter(cls.model.user_id == user_id).first()
 
     @classmethod
-    def upsert_state(cls, db: Session, user_id: str, data: dict[str, Any]) -> WorkspaceState:
+    def upsert_state(cls, db: Session, user_id: UUID, data: dict[str, Any]) -> WorkspaceState:
         """Upsert state.
         
         Args:

@@ -1,5 +1,7 @@
 """Business logic for workspace state synchronization."""
 
+from uuid import UUID
+
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -10,7 +12,7 @@ from app.repositories.workspace_repository import WorkspaceRepository
 class WorkspaceService:
 
     @staticmethod
-    def get_state(db: Session, user_id: str) -> dict[str, Any] | None:
+    def get_state(db: Session, user_id: UUID) -> dict[str, Any] | None:
         """Retrieve state.
         
         Args:
@@ -30,7 +32,7 @@ class WorkspaceService:
         }
 
     @staticmethod
-    def sync_state(db: Session, user_id: str, state_data: dict[str, Any]) -> dict[str, Any]:
+    def sync_state(db: Session, user_id: UUID, state_data: dict[str, Any]) -> dict[str, Any]:
         """Sync state.
         
         Args:

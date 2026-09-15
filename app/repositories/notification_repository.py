@@ -1,6 +1,8 @@
 # app/repositories/notification_repository.py
 """Repository for notification persistence and querying."""
 
+from uuid import UUID
+
 from typing import Any, cast
 
 from sqlalchemy.orm import Session
@@ -18,7 +20,7 @@ class NotificationRepository(BaseRepository[Notification]):
     def get_user_notifications(
         cls,
         db: Session,
-        user_id: str,
+        user_id: UUID,
         unread_only: bool = False,
         archived: bool = False,
         limit: int = 50,
@@ -51,7 +53,7 @@ class NotificationRepository(BaseRepository[Notification]):
         )
 
     @classmethod
-    def count_unread(cls, db: Session, user_id: str) -> int:
+    def count_unread(cls, db: Session, user_id: UUID) -> int:
         """Count unread.
         
         Args:
@@ -68,7 +70,7 @@ class NotificationRepository(BaseRepository[Notification]):
         )
 
     @classmethod
-    def mark_all_read(cls, db: Session, user_id: str) -> int:
+    def mark_all_read(cls, db: Session, user_id: UUID) -> int:
         """Mark all notifications as read.
         
         Args:
@@ -88,7 +90,7 @@ class NotificationRepository(BaseRepository[Notification]):
 
     @classmethod
     def bulk_update(
-        cls, db: Session, ids: list[str], user_id: str, data: dict[str, Any]
+        cls, db: Session, ids: list[UUID], user_id: UUID, data: dict[str, Any]
     ) -> int:
         """Bulk update.
         
@@ -114,7 +116,7 @@ class NotificationRepository(BaseRepository[Notification]):
         return updated
 
     @classmethod
-    def bulk_delete(cls, db: Session, ids: list[str], user_id: str) -> int:
+    def bulk_delete(cls, db: Session, ids: list[UUID], user_id: UUID) -> int:
         """Bulk delete.
         
         Args:

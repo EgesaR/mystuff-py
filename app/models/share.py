@@ -1,11 +1,13 @@
 """Generic share grant owner -> target_user for any resource type."""
 
 from typing import TYPE_CHECKING
+from uuid import UUID
 
-from sqlalchemy import Enum, ForeignKey, String, Text
+from sqlalchemy import Enum, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+from app.database.types import GUID
 from app.models.base import TimestampMixin, UUIDMixin
 from app.models.enums import SharePermission, ShareResourceType, ShareStatus
 
@@ -18,11 +20,11 @@ class Share(Base, UUIDMixin,  TimestampMixin):
 
     resource_type: Mapped[ShareResourceType] = mapped_column(
         Enum(ShareResourceType))
-    resource_id: Mapped[str] = mapped_column(String(36))
+    resource_id: Mapped[UUID] = mapped_column(GUID())
 
-    owner_id: Mapped[str] = mapped_column(
+    owner_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"))
-    target_user_id: Mapped[str | None] = mapped_column(
+    target_user_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
 
     permission: Mapped[SharePermission] = mapped_column(

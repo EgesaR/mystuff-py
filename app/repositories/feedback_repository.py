@@ -1,5 +1,7 @@
 """Feedback repository handling database queries for Feedback models."""
 
+from uuid import UUID
+
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.feedback import Feedback
@@ -29,7 +31,7 @@ class FeedbackRepository(BaseRepository[Feedback]):
         )
 
     @classmethod
-    def get_user_feedback(cls, db: Session, user_id: str) -> list[Feedback]:
+    def get_user_feedback(cls, db: Session, user_id: UUID) -> list[Feedback]:
         """Retrieve feedback submitted by a specific user.
 
         Args:
@@ -39,6 +41,12 @@ class FeedbackRepository(BaseRepository[Feedback]):
         Returns:
             list[Feedback]: List of Feedback.
         """
+        for f in (db.query(cls.model)
+                  .filter(cls.model.user_id == user_id)
+                  .order_by(cls.model.created_at.desc())
+                  .all()):
+            print("Feedback i:",f.user)
+            
         return (
             db.query(cls.model)
             .filter(cls.model.user_id == user_id)

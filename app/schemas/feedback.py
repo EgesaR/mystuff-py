@@ -4,16 +4,40 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
+
+
+FeedbackCategory = Literal[
+    "bug",
+    "feature",
+    "improvement",
+    "general",
+    "praise",
+]
 
 
 class FeedbackCreate(BaseModel):
     """Schema for submitting new feedback."""
 
-    message: str = Field(min_length=1, max_length=4000)
-    category: Literal["bug", "feature", "general", "praise"] = "general"
-    attached_logs: str | None = Field(default=None, max_length=100000)
+    message: str = Field(
+        min_length=1,
+        max_length=4000,
+    )
+
+    category: FeedbackCategory = "general"
+
+    rating: int | None = Field(
+        default=None,
+        ge=1,
+        le=5,
+    )
+
+    attached_logs: str | None = Field(
+        default=None,
+        max_length=100000,
+    )
 
 
 class FeedbackStatusUpdate(BaseModel):
@@ -23,9 +47,9 @@ class FeedbackStatusUpdate(BaseModel):
 
 
 class FeedbackUserSummary(BaseModel):
-    """Minimal user info attached to a feedback item."""
+    """Minimal user information attached to a feedback item."""
 
-    id: str
+    id: UUID
     username: str
     email: str
 
@@ -35,10 +59,11 @@ class FeedbackUserSummary(BaseModel):
 class FeedbackResponse(BaseModel):
     """Schema for feedback response payloads."""
 
-    id: str
+    id: UUID
     message: str
     category: str
     status: str
+    rating: int | None = None
     attached_logs: str | None = None
     user: FeedbackUserSummary
     created_at: datetime

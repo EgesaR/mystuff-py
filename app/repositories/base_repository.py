@@ -49,7 +49,7 @@ class BaseRepository[ModelT]:
             List of ModelT.
         """
         return db.query(cls.model).offset(skip).limit(limit).all()
-    
+
     @classmethod
     def create(cls, db: Session, obj_in: dict[str, Any]) -> ModelT:
         """Create.

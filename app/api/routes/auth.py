@@ -1,9 +1,10 @@
-"""api/routes/auth.py
+"""
 Authentication endpoints: register, login, refresh, logout, password management.
 
 All business logic lives in AuthService.
 This router only handles HTTP contracts.
 """
+
 import logging
 from typing import Literal, TypedDict
 
@@ -24,9 +25,23 @@ from app.schemas.auth import (
     ResetPasswordRequest,
     SignupRequest,
 )
-from app.schemas.user import UserResponse
+from app.schemas.user import (
+    BetaResponse,
+    FeedbackResponse,
+    UserOnboardingResponse,
+    UserResponse,
+)
 from app.services.auth_service import AuthService
+from app.services.onboarding_service import OnboardingService
 
+logger = logging.getLogger("app")
+
+router = APIRouter()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Cookie types
+# ─────────────────────────────────────────────────────────────────────────────
 
 class CookieOptions(TypedDict, total=False):
     """Options supported by Response.set_cookie()."""
@@ -50,13 +65,13 @@ class DeleteCookieOptions(TypedDict, total=False):
     samesite: Literal["lax", "strict", "none"]
 
 
-logger = logging.getLogger("app")
-
-router = APIRouter()
-
+# ─────────────────────────────────────────────────────────────────────────────
+# Cookie helpers
+# ─────────────────────────────────────────────────────────────────────────────
 
 def get_cookie_options() -> DeleteCookieOptions:
-    """Return common cookie options."""
+    """Return common authentication-cookie options."""
+
     return {
         "httponly": True,
         "secure": not settings.DEBUG,
@@ -86,17 +101,6 @@ def set_auth_cookies(
         "max_age": 60 * 60 * 24 * 7,
     }
 
-    print("========== COOKIE CONFIG ==========")
-    print("Environment:", settings.ENVIRONMENT)
-    print("DEBUG:", settings.DEBUG)
-    print("Access cookie options:")
-    print(access_options)
-    print("Refresh cookie options:")
-    print(refresh_options)
-    print("Access token length:", len(access_token))
-    print("Refresh token length:", len(refresh_token))
-    print("===================================")
-
     response.set_cookie(
         key="access_token",
         value=access_token,
@@ -112,41 +116,111 @@ def set_auth_cookies(
 
 def clear_auth_cookies(response: Response) -> None:
     """Clear authentication cookies."""
+
     options = get_cookie_options()
 
     response.delete_cookie(
-        "access_token",
+        key="access_token",
         **options,
     )
 
     response.delete_cookie(
-        "refresh_token",
+        key="refresh_token",
         **options,
     )
 
-# ── Register ─────────────────────────────────────────────────────────────────
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Onboarding helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+def onboarding_step_index(current_step: str) -> int:
+    """
+    Convert the persisted onboarding step name to its public integer index.
+
+    Example:
+        welcome   -> 0
+        workspace -> 1
+        features  -> 2
+        feedback  -> 3
+        beta      -> 4
+        complete  -> 5
+    """
+
+    try:
+        return settings.ONBOARDING_STEPS.index(current_step)
+    except ValueError:
+        logger.warning(
+            "Unknown onboarding step '%s'; defaulting to 0",
+            current_step,
+        )
+        return 0
+
+
+def build_user_response(
+    db: Session,
+    user: User,
+) -> UserResponse:
+    """
+    Build the API representation of a user.
+
+    Onboarding.beta and onboarding.feedback are derived values and therefore
+    must be constructed explicitly instead of serializing the SQLAlchemy
+    UserOnboarding model directly.
+    """
+
+    onboarding = OnboardingService.build_state(
+        db,
+        user,
+    )
+
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        username=user.username,
+        full_name=user.full_name,
+        avatar_url=user.avatar_url,
+        bio=user.bio,
+        is_active=user.is_active,
+        is_developer=user.is_developer,
+        is_admin=user.is_admin,
+        onboarding=UserOnboardingResponse(
+            required=onboarding.required,
+            completed=onboarding.completed,
+            step=onboarding_step_index(onboarding.current_step),
+            skipped=onboarding.skipped,
+            version=onboarding.version,
+            completed_at=onboarding.completed_at,
+            beta=BetaResponse(
+                interested=onboarding.beta.interested,
+                status=onboarding.beta.status,
+                signed_up_at=onboarding.beta.signed_up_at,
+            ),
+            feedback=FeedbackResponse(
+                submitted=onboarding.feedback.submitted,
+                last_submitted_at=onboarding.feedback.last_submitted_at,
+            ),
+        ),
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Signup
+# ─────────────────────────────────────────────────────────────────────────────
 
 @router.post(
     "/signup",
     response_model=LoginResponse,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new user account",
 )
 def signup(
     payload: SignupRequest,
-    response: Response,  # Add this!
+    response: Response,
     db: Session = Depends(get_db),
-):
-    """Register a new user account.
+) -> LoginResponse:
+    """Register a new user and issue authentication cookies."""
 
-    Args:
-        payload (SignupRequest): Request payload.
-        response (Response): HTTP response object.
-        db (Session): Database session.
-
-    Returns:
-        Any: Result value.
-    """
     try:
         user = AuthService.signup(
             db,
@@ -155,20 +229,26 @@ def signup(
             password=payload.password,
             full_name=payload.full_name,
         )
-        tokens = AuthService.create_token_pair(db, user)
 
-        # Set cookies
+        tokens = AuthService.create_token_pair(
+            db,
+            user,
+        )
+
         set_auth_cookies(
             response,
             tokens.access_token,
             tokens.refresh_token,
         )
 
-        return {
-            "user": user,
-            "access_token": tokens.access_token,
-            "token_type": "bearer"
-        }
+        return LoginResponse(
+            user=build_user_response(
+                db,
+                user,
+            ),
+            access_token=tokens.access_token,
+            token_type="bearer",
+        )
 
     except UserAlreadyExistsError as exc:
         raise HTTPException(
@@ -177,32 +257,54 @@ def signup(
         ) from exc
 
 
-# ── Login ─────────────────────────────────────────────────────────────────────
-@router.post("/login", response_model=LoginResponse)
+# ─────────────────────────────────────────────────────────────────────────────
+# Login
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.post(
+    "/login",
+    response_model=LoginResponse,
+    summary="Authenticate a user",
+)
 def login(
     payload: LoginRequest,
-    response: Response,  # Add response injection
+    response: Response,
     db: Session = Depends(get_db),
-):
-    """Authenticate a user and issue authorization cookies.
+) -> LoginResponse:
+    """Authenticate a user and issue authentication cookies."""
 
-    Args:
-        payload (LoginRequest): Request payload.
-        response (Response): HTTP response object.
-        db (Session): Database session.
+    logger.info(
+        "Login attempt for email=%s",
+        payload.email,
+    )
 
-    Returns:
-        Any: Result value.
-    """
     try:
         user = AuthService.authenticate(
-            db, email=payload.email, password=payload.password
+            db,
+            email=payload.email,
+            password=payload.password,
         )
     except AuthenticationError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Invalid email or password") from exc
+        logger.warning(
+            "Authentication failed for email=%s",
+            payload.email,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        ) from exc
 
-    tokens = AuthService.create_token_pair(db, user)
+    # Ensure onboarding exists and is at the current application version
+    # before constructing the response.
+    onboarding = OnboardingService.build_state(
+        db,
+        user,
+    )
+
+    tokens = AuthService.create_token_pair(
+        db,
+        user,
+    )
 
     set_auth_cookies(
         response,
@@ -210,14 +312,26 @@ def login(
         tokens.refresh_token,
     )
 
-    return {
-        "user": user,
-        "access_token": tokens.access_token,
-        "token_type": "bearer"
-    }
+    logger.info(
+        "Login successful: email=%s step=%s version=%s",
+        user.email,
+        onboarding.current_step,
+        onboarding.version,
+    )
+
+    return LoginResponse(
+        user=build_user_response(
+            db,
+            user,
+        ),
+        access_token=tokens.access_token,
+        token_type="bearer",
+    )
 
 
-# ── Refresh ───────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# Refresh
+# ─────────────────────────────────────────────────────────────────────────────
 
 @router.post(
     "/refresh",
@@ -225,24 +339,22 @@ def login(
 )
 def refresh(
     response: Response,
-    refresh_token: str | None = Cookie(None),
+    refresh_token: str | None = Cookie(default=None),
     db: Session = Depends(get_db),
-):
-    """Refresh access and refresh tokens.
+) -> dict[str, str]:
+    """Refresh access and refresh tokens."""
 
-    Args:
-        payload (RefreshRequest): Request payload.
-        db (Session): Database session.
-
-    Returns:
-        TokenPair: TokenPair result.
-    """
     if not refresh_token:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token missing")
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token missing",
+        )
 
     try:
-        tokens = AuthService.refresh_tokens(db, refresh_token)
+        tokens = AuthService.refresh_tokens(
+            db,
+            refresh_token,
+        )
     except AuthenticationError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -255,10 +367,14 @@ def refresh(
         tokens.refresh_token,
     )
 
-    return {"message": "Tokens refreshed successfully"}
+    return {
+        "message": "Tokens refreshed successfully",
+    }
 
 
-# ── Logout ────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# Logout
+# ─────────────────────────────────────────────────────────────────────────────
 
 @router.post(
     "/logout",
@@ -267,26 +383,18 @@ def refresh(
 )
 def logout(
     response: Response,
-    refresh_token: str | None = Cookie(None),
+    refresh_token: str | None = Cookie(default=None),
     db: Session = Depends(get_db),
 ) -> None:
-    """Revoke the current refresh token and clear cookies.
+    """Revoke the current refresh token and clear cookies."""
 
-    Args:
-        response (Response): HTTP response object.
-        payload (RefreshRequest): Request payload.
-        db (Session): Database session.
-
-    Returns:
-        None: None result.
-    """
     if refresh_token:
-        AuthService.logout(db, refresh_token)
+        AuthService.logout(
+            db,
+            refresh_token,
+        )
 
     clear_auth_cookies(response)
-
-    # Returning None satisfies status_code=204
-    return None
 
 
 @router.post(
@@ -295,22 +403,23 @@ def logout(
     summary="Revoke ALL refresh tokens for the current user",
 )
 def logout_all(
+    response: Response,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
-    """Revoke all refresh tokens for the current user.
+    """Revoke all refresh tokens for the current user."""
 
-    Args:
-        current_user (User): Authenticated user performing the action.
-        db (Session): Database session.
+    AuthService.logout_all_devices(
+        db,
+        current_user.id,
+    )
 
-    Returns:
-        None: None result.
-    """
-    AuthService.logout_all_devices(db, current_user.id)
+    clear_auth_cookies(response)
 
 
-# ── Forgot / Reset password ───────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# Forgot password
+# ─────────────────────────────────────────────────────────────────────────────
 
 @router.post(
     "/forgot-password",
@@ -321,26 +430,26 @@ def forgot_password(
     payload: ForgotPasswordRequest,
     db: Session = Depends(get_db),
 ) -> ForgotPasswordResponse:
-    """Send a password reset code to the user email.
+    """Request a password-reset code."""
 
-    Args:
-        payload (ForgotPasswordRequest): Request payload.
-        db (Session): Database session.
+    result = AuthService.request_password_reset(
+        db,
+        email=payload.email,
+    )
 
-    Returns:
-        ForgotPasswordResponse: ForgotPasswordResponse payload.
-    """
-    result = AuthService.request_password_reset(db, email=payload.email)
-
-    response = ForgotPasswordResponse(
-        message="If that email is registered, a reset code was sent."
+    result_response = ForgotPasswordResponse(
+        message="If that email is registered, a reset code was sent.",
     )
 
     if settings.DEMO_MODE and result is not None:
-        response.code = result.code  # type: ignore[attr-defined]
+        result_response.code = result.code  # type: ignore[attr-defined]
 
-    return response
+    return result_response
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Reset password
+# ─────────────────────────────────────────────────────────────────────────────
 
 @router.post(
     "/reset-password",
@@ -351,15 +460,8 @@ def reset_password(
     payload: ResetPasswordRequest,
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
-    """Reset a user password using a recovery code.
+    """Reset a user's password using a valid recovery code."""
 
-    Args:
-        payload (ResetPasswordRequest): Request payload.
-        db (Session): Database session.
-
-    Returns:
-        None: None result.
-    """
     try:
         AuthService.reset_password(
             db,
@@ -368,7 +470,10 @@ def reset_password(
             new_password=payload.new_password,
         )
 
-        return {"message": "Password updated successfully."}
+        return {
+            "message": "Password updated successfully.",
+        }
+
     except (AuthenticationError, ValueError) as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -376,7 +481,9 @@ def reset_password(
         ) from exc
 
 
-# ── Change password (authenticated) ──────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# Change password
+# ─────────────────────────────────────────────────────────────────────────────
 
 @router.post(
     "/change-password",
@@ -388,16 +495,8 @@ def change_password(
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
-    """Change the current user password.
+    """Change the authenticated user's password."""
 
-    Args:
-        payload (ChangePasswordRequest): Request payload.
-        current_user (User): Authenticated user performing the action.
-        db (Session): Database session.
-
-    Returns:
-        None: None result.
-    """
     try:
         AuthService.change_password(
             db,
@@ -412,7 +511,9 @@ def change_password(
         ) from exc
 
 
-# ── Me ────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# Current user
+# ─────────────────────────────────────────────────────────────────────────────
 
 @router.get(
     "/me",
@@ -420,14 +521,21 @@ def change_password(
     summary="Return the authenticated user's profile",
 )
 def me(
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_active_user),
-) -> User:
-    """Return the authenticated user profile.
+) -> UserResponse:
+    """Return the authenticated user's complete profile."""
 
-    Args:
-        current_user (User): Authenticated user performing the action.
+    result = build_user_response(
+        db,
+        current_user,
+    )
 
-    Returns:
-        User: User data.
-    """
-    return current_user
+    logger.debug(
+        "Current user loaded: email=%s step=%s version=%s",
+        current_user.email,
+        result.onboarding.step,
+        result.onboarding.version,
+    )
+
+    return result

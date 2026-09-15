@@ -1,6 +1,7 @@
 """Database model for file storage."""
 
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -48,11 +49,11 @@ class File(Base, UUIDMixin, TimestampMixin):
         Enum(MediaType),
     )
 
-    owner_id: Mapped[str] = mapped_column(
+    owner_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
     )
 
-    folder_id: Mapped[str | None] = mapped_column(
+    folder_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("folders.id", ondelete="SET NULL"),
         nullable=True,
     )

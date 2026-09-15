@@ -5,6 +5,7 @@ import secrets
 import string
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -125,7 +126,7 @@ class AuthService:
             RefreshTokenRepository.revoke_token(db, token_record)
 
     @staticmethod
-    def logout_all_devices(db: Session, user_id: str) -> int:
+    def logout_all_devices(db: Session, user_id: UUID) -> int:
         """Revoke all active refresh tokens for a user."""
         return RefreshTokenRepository.revoke_all_user_tokens(db, user_id)
 
@@ -137,7 +138,7 @@ class AuthService:
 
         if not user:
             # Prevents email enumeration by failing silently
-            return None
+            return AuthenticationError("Invalid profile recovery parameters.")
 
         code = AuthService._generate_numeric_code(6)
         user.reset_code = code
@@ -172,11 +173,15 @@ class AuthService:
         if not user:
             raise AuthenticationError("Invalid profile recovery parameters.")
 
+        expires_at = user.reset_code_expires_at
+        if expires_at and expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=UTC)
+            
         if (
             not user.reset_code
             or user.reset_code != code
-            or not user.reset_code_expires_at
-            or user.reset_code_expires_at < datetime.now(UTC)
+            or not expires_at
+            or expires_at < datetime.now(UTC)
         ):
             raise ValueError("Invalid or expired confirmation code.")
 

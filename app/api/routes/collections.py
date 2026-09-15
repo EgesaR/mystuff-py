@@ -12,6 +12,8 @@ That prefix is what the Cloud Storage frontend assumes.
 
 import logging
 
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -86,7 +88,7 @@ def create_collection(
     summary="Rename or recolor a collection",
 )
 def update_collection(
-    collection_id: str,
+    collection_id: UUID,
     payload: CollectionUpdate,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
@@ -122,7 +124,7 @@ def update_collection(
     summary="Delete a collection (files are not deleted)",
 )
 def delete_collection(
-    collection_id: str,
+    collection_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:
@@ -152,7 +154,7 @@ def delete_collection(
     summary="List collections a given file belongs to",
 )
 def list_file_collections(
-    file_id: str,
+    file_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[CollectionResponse]:
@@ -178,7 +180,7 @@ def list_file_collections(
     summary="List files in a collection",
 )
 def list_collection_files(
-    collection_id: str,
+    collection_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[FileResponse]:
@@ -208,7 +210,7 @@ def list_collection_files(
     summary="Add a file to a collection",
 )
 def add_file_to_collection(
-    collection_id: str,
+    collection_id: UUID,
     payload: CollectionFileAdd,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
@@ -243,8 +245,8 @@ def add_file_to_collection(
     summary="Remove a file from a collection",
 )
 def remove_file_from_collection(
-    collection_id: str,
-    file_id: str,
+    collection_id: UUID,
+    file_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:

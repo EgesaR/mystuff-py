@@ -1,11 +1,13 @@
 """Database models for media attachments and records."""
 
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import Enum, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+from app.database.types import GUID
 from app.models.base import TimestampMixin, UUIDMixin
 from app.models.enums import NoteMediaType
 
@@ -19,7 +21,8 @@ class NoteMedia(Base, UUIDMixin, TimestampMixin):
 
     __tablename__ = "note_media"
 
-    note_id: Mapped[str] = mapped_column(
+    note_id: Mapped[UUID] = mapped_column(
+        GUID(),
         ForeignKey("notes.id", ondelete="CASCADE"),
     )
 
@@ -70,7 +73,8 @@ class AudioNote(Base, UUIDMixin, TimestampMixin):
         nullable=True,
     )
 
-    owner_id: Mapped[str] = mapped_column(
+    owner_id: Mapped[UUID] = mapped_column(
+        GUID(),
         ForeignKey("users.id", ondelete="CASCADE"),
     )
 
@@ -113,7 +117,8 @@ class MediaItem(Base, UUIDMixin, TimestampMixin):
 
     duration_sec: Mapped[float | None]
 
-    owner_id: Mapped[str] = mapped_column(
+    owner_id: Mapped[UUID] = mapped_column(
+        GUID(),
         ForeignKey("users.id", ondelete="CASCADE"),
     )
 

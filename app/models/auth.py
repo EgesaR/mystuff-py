@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+from app.database.types import GUID
 from app.models.base import TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
@@ -35,11 +37,10 @@ class RefreshToken(Base, UUIDMixin, TimestampMixin):
         default=False,
     )
 
-    user_id: Mapped[str] = mapped_column(
-        ForeignKey(
-            "users.id",
-            ondelete="CASCADE",
-        ),
+    user_id: Mapped[UUID] = mapped_column(
+        GUID(),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
     )
 
     user: Mapped[User] = relationship(
@@ -67,11 +68,10 @@ class PasswordResetToken(Base, UUIDMixin, TimestampMixin):
         default=False,
     )
 
-    user_id: Mapped[str] = mapped_column(
-        ForeignKey(
-            "users.id",
-            ondelete="CASCADE",
-        ),
+    user_id: Mapped[UUID] = mapped_column(
+        GUID(),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
     )
 
     user: Mapped[User] = relationship(

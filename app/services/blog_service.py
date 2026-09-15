@@ -1,6 +1,7 @@
 """Blog service module managing business logic operations for blog posts."""
 
 from datetime import UTC, datetime
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -38,7 +39,7 @@ class BlogService:
     @staticmethod
     def create_post(
         db: Session,
-        author_id: str,
+        author_id: UUID,
         title: str,
         excerpt: str,
         content: str,
@@ -86,7 +87,7 @@ class BlogService:
     @staticmethod
     def update_post(
         db: Session,
-        post_id: str,
+        post_id: UUID,
         update: BlogPostUpdate,
     ) -> BlogPost:
         """Update a blog post, stamping `published_at` the moment it's first published.
@@ -155,7 +156,7 @@ class BlogService:
         return post
     
     @staticmethod
-    def get_by_id(db: Session, post_id: str) -> BlogPost:
+    def get_by_id(db: Session, post_id: UUID) -> BlogPost:
         """Fetch a single post by id, including drafts. Developer-only (used by the admin editor).
  
         Args:

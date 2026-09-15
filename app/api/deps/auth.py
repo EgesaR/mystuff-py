@@ -83,6 +83,19 @@ def require_developer(
     return current_user
 
 
+def require_admin(
+    current_user: User = Depends(require_active_user),
+) -> User:
+    """Require administrator privileges."""
+    if not getattr(current_user, "is_admin", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator access required",
+        )
+
+    return current_user
+
+
 # ──────────────────────────────────────────────────────────────
 # WebSocket Auth
 # ──────────────────────────────────────────────────────────────

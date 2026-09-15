@@ -1,5 +1,7 @@
 """Repository for note comment persistence and querying"""
 
+from uuid import UUID
+
 from sqlalchemy.orm import Session
 
 from app.models.comment import NoteComment
@@ -12,7 +14,7 @@ class CommentRepository(BaseRepository[NoteComment]):
     model = NoteComment
 
     @classmethod
-    def get_for_note(cls, db: Session, note_id: str) -> list[NoteComment]:
+    def get_for_note(cls, db: Session, note_id: UUID) -> list[NoteComment]:
         """List comments for a note, oldest first."""
         return (
             db.query(cls.model)

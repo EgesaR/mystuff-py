@@ -1,5 +1,7 @@
 """Note repository handling database queries for Note models."""
 
+from uuid import UUID
+
 from sqlalchemy.orm import Session
 
 from app.models.note import Note
@@ -13,7 +15,7 @@ class NoteRepository(BaseRepository[Note]):
 
     @classmethod
     def get_user_notes(
-        cls, db: Session, user_id: str, folder_id: str | None = None
+        cls, db: Session, user_id: UUID, folder_id: UUID | None = None
     ) -> list[Note]:
         """Retrieve user notes.
         
@@ -34,7 +36,7 @@ class NoteRepository(BaseRepository[Note]):
         return query.order_by(cls.model.created_at.desc()).all()
 
     @classmethod
-    def get_pinned_notes(cls, db: Session, user_id: str) -> list[Note]:
+    def get_pinned_notes(cls, db: Session, user_id: UUID) -> list[Note]:
         """Retrieve pinned notes.
         
         Args:
@@ -52,7 +54,7 @@ class NoteRepository(BaseRepository[Note]):
         )
 
     @classmethod
-    def search_notes(cls, db: Session, user_id: str, query: str) -> list[Note]:
+    def search_notes(cls, db: Session, user_id: UUID, query: str) -> list[Note]:
         """Search notes.
         
         Args:

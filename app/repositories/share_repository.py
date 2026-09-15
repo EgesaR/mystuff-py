@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy.orm import Session
 
 from app.models.enums import ShareResourceType
@@ -13,7 +15,7 @@ class ShareRepository(BaseRepository[Share]):
         return db.query(cls.model).filter(cls.model.token == token).first()
 
     @classmethod
-    def get_incoming(cls, db: Session, user_id: str) -> list[Share]:
+    def get_incoming(cls, db: Session, user_id: UUID) -> list[Share]:
         return (
             db.query(cls.model)
             .filter(cls.model.target_user_id == user_id)
@@ -26,8 +28,8 @@ class ShareRepository(BaseRepository[Share]):
         cls,
         db: Session,
         resource_type: ShareResourceType,
-        resource_id: str,
-        owner_id: str
+        resource_id: UUID,
+        owner_id: UUID
     ) -> list[Share]:
         return (
             db.query(cls.model)
@@ -40,7 +42,7 @@ class ShareRepository(BaseRepository[Share]):
 
     @classmethod
     def get_accepted_for_resource(
-        cls, db: Session, resource_type: ShareResourceType, resource_id: str, user_id: str
+        cls, db: Session, resource_type: ShareResourceType, resource_id: UUID, user_id: UUID
     ) -> Share | None:
         return (
             db.query(cls.model)

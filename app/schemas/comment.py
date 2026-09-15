@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class CommentCreate(BaseModel):
-    """Schema for posting a comment. @username in the body triggers a notificationto to that user if their account exists."""
+    """Schema for posting a comment.
+
+    @username references in the body trigger a notification to the matching
+    user when an account exists.
+    """
 
     body: str = Field(min_length=1, max_length=2000)
 
@@ -16,9 +22,9 @@ class CommentCreate(BaseModel):
 class CommentResponse(BaseModel):
     """Schema for a comment, with the author's username resolved."""
 
-    id: str
-    note_id: str
-    author_id: str
+    id: UUID
+    note_id: UUID
+    author_id: UUID
     author_username: str
     body: str
     created_at: datetime

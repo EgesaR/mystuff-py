@@ -3,6 +3,8 @@
 
 import logging
 
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -73,7 +75,7 @@ def unread_count(
 
 @router.post("/{notification_id}/read", response_model=NotificationResponse)
 def mark_read(
-    notification_id: str,
+    notification_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> NotificationResponse:
@@ -116,7 +118,7 @@ def mark_all_read(
 
 @router.post("/{notification_id}/archive", response_model=NotificationResponse)
 def archive_notification(
-    notification_id: str,
+    notification_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> NotificationResponse:
@@ -144,7 +146,7 @@ def archive_notification(
 
 @router.post("/{notification_id}/unarchive", response_model=NotificationResponse)
 def unarchive_notification(
-    notification_id: str,
+    notification_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> NotificationResponse:
@@ -194,7 +196,7 @@ def bulk_notification_action(
 
 @router.delete("/{notification_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_notification(
-    notification_id: str,
+    notification_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:

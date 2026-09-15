@@ -1,6 +1,7 @@
 """Pydantic schemas for collections."""
 
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -16,10 +17,10 @@ class CollectionUpdate(BaseModel):
 
 
 class CollectionResponse(BaseModel):
-    id: str
+    id: UUID
     name: str
     color: str
-    owner_id: str
+    owner_id: UUID
     file_count: int = 0
     created_at: datetime
     updated_at: datetime
@@ -28,4 +29,4 @@ class CollectionResponse(BaseModel):
 
 
 class CollectionFileAdd(BaseModel):
-    file_id: str
+    file_id: UUID

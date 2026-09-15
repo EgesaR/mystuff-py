@@ -1,5 +1,7 @@
 """Database abstraction layers and query builders for media assets."""
 
+from uuid import UUID
+
 from sqlalchemy.orm import Session
 
 from app.core.errors import NotFoundError, PermissionDeniedError
@@ -14,7 +16,7 @@ class NoteMediaRepository(BaseRepository[NoteMedia]):
     model = NoteMedia
 
     @classmethod
-    def get_note_media(cls, db: Session, note_id: str) -> list[NoteMedia]:
+    def get_note_media(cls, db: Session, note_id: UUID) -> list[NoteMedia]:
         """Retrieve note media.
         
         Args:
@@ -37,7 +39,7 @@ class AudioNoteRepository(BaseRepository[AudioNote]):
     model = AudioNote
 
     @classmethod
-    def get_user_audio_notes(cls, db: Session, user_id: str) -> list[AudioNote]:
+    def get_user_audio_notes(cls, db: Session, user_id: UUID) -> list[AudioNote]:
         """Retrieve user audio notes.
         
         Args:
@@ -55,7 +57,7 @@ class AudioNoteRepository(BaseRepository[AudioNote]):
 
     @classmethod
     def get_secure_by_id(
-        cls, db: Session, entity_id: str, user_id: str
+        cls, db: Session, entity_id: UUID, user_id: UUID
     ) -> AudioNote:
         """Retrieve secure by ID.
         
@@ -81,7 +83,7 @@ class MediaItemRepository(BaseRepository[MediaItem]):
     model = MediaItem
 
     @classmethod
-    def get_user_media(cls, db: Session, user_id: str) -> list[MediaItem]:
+    def get_user_media(cls, db: Session, user_id: UUID) -> list[MediaItem]:
         """Retrieve user media.
         
         Args:
@@ -99,7 +101,7 @@ class MediaItemRepository(BaseRepository[MediaItem]):
 
     @classmethod
     def get_filtered_media(
-        cls, db: Session, user_id: str, media_type: MediaType | None = None
+        cls, db: Session, user_id: UUID, media_type: MediaType | None = None
     ) -> list[MediaItem]:
         """Retrieve filtered media.
         
@@ -118,7 +120,7 @@ class MediaItemRepository(BaseRepository[MediaItem]):
 
     @classmethod
     def get_secure_by_id(
-        cls, db: Session, entity_id: str, user_id: str
+        cls, db: Session, entity_id: UUID, user_id: UUID
     ) -> MediaItem:
         """Retrieve secure by ID.
         

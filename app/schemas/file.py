@@ -1,5 +1,7 @@
 """Pydantic models for file representation."""
 
+from uuid import UUID
+
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
@@ -24,7 +26,7 @@ class FileResponse(BaseModel):
 
     media_type: MediaType
 
-    folder_id: str | None
+    folder_id: UUID | None
 
     created_at: datetime
     updated_at: datetime

@@ -1,11 +1,13 @@
 """Database model for user workspace layouts and tab states."""
 
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 from sqlalchemy import JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+from app.database.types import GUID
 from app.models.base import TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
@@ -17,7 +19,8 @@ class WorkspaceState(Base, UUIDMixin, TimestampMixin):
 
     __tablename__ = "workspace_states"
 
-    user_id: Mapped[str] = mapped_column(
+    user_id: Mapped[UUID] = mapped_column(
+        GUID(),
         ForeignKey("users.id", ondelete="CASCADE"),
         unique=True,
     )

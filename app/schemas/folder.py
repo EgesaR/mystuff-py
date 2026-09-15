@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -17,7 +18,7 @@ class FolderCreate(BaseModel):
 
     color: str = "#6366f1"
 
-    parent_id: str | None = None
+    parent_id: UUID | None = None
 
 
 class FolderUpdate(BaseModel):
@@ -35,10 +36,10 @@ class FolderUpdate(BaseModel):
 class FolderResponse(BaseModel):
     """Schema for returning folder details."""
 
-    id: str
+    id: UUID
     name: str
     color: str
-    parent_id: str | None
+    parent_id: UUID | None
 
     # Recursive relationship.
     children: list["FolderResponse"] = Field(  # pyright: ignore[reportUnknownVariableType]

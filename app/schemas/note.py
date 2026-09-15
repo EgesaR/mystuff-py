@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -18,7 +19,7 @@ class NoteCreate(BaseModel):
         max_length=255,
     )
     content: dict[str, JsonValue] | None = None
-    folder_id: str | None = None
+    folder_id: UUID | None = None
     color: str = "#ffffff"
 
 

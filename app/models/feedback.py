@@ -1,11 +1,13 @@
 """Feedback database model definition module."""
 
 from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
 
-from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+from app.database.types import GUID
 from app.models.base import TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
@@ -17,16 +19,46 @@ class Feedback(Base, UUIDMixin, TimestampMixin):
 
     __tablename__ = "feedback"
 
-    message: Mapped[str] = mapped_column(Text)
+    id: Mapped[UUID] = mapped_column(
+        GUID(),
+        primary_key=True,
+        default=uuid4,
+    )
 
-    attached_logs: Mapped[str | None] = mapped_column(Text, nullable=True)
+    message: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+    )
 
-    category: Mapped[str] = mapped_column(String(30), default="general")
+    attached_logs: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
 
-    status: Mapped[str] = mapped_column(String(20), default="new")
+    category: Mapped[str] = mapped_column(
+        String(30),
+        default="general",
+        nullable=False,
+    )
 
-    user_id: Mapped[str] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
+    status: Mapped[str] = mapped_column(
+        String(20),
+        default="new",
+        nullable=False,
+    )
+
+    rating: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+    user_id: Mapped[UUID] = mapped_column(
+        GUID(),
+        ForeignKey(
+            "users.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
     )
 
     user: Mapped["User"] = relationship()

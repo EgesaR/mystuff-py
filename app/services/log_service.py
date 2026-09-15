@@ -1,6 +1,8 @@
 """Module containing the operational log orchestration service."""
 
 import logging
+from uuid import UUID
+
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -21,7 +23,7 @@ class LogService:
     @staticmethod
     def log(
         db: Session,
-        user_id: str | None,
+        user_id: UUID | None,
         message: str,
         level: LogLevel = LogLevel.INFO,
         label: str = "general",
@@ -67,7 +69,7 @@ class LogService:
     @staticmethod
     def log_accuracy(
         db: Session,
-        user_id: str | None,
+        user_id: UUID | None,
         mode: str,
         accuracy_type: AccuracyType | str,
         result: AccuracyResult,
@@ -115,7 +117,7 @@ class LogService:
         db: Session,
         mode: str | None = None,
         accuracy_type: AccuracyType | str | None = None,
-        user_id: str | None = None,
+        user_id: UUID | None = None,
         limit: int = 500,
     ) -> dict[str, Any]:
         """Retrieve accuracy stats.
@@ -198,7 +200,7 @@ class LogService:
     @staticmethod
     def search(
         db: Session,
-        user_id: str | None = None,
+        user_id: UUID | None = None,
         regex_pattern: str | None = None,
         limit: int = 100,
     ) -> list[SystemLog]:

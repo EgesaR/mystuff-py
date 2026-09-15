@@ -4,6 +4,8 @@ System log search (REST) + live telemetry (WebSocket) + accuracy stats.
 
 import logging
 from collections import defaultdict
+from uuid import UUID
+
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
@@ -35,8 +37,7 @@ class ConnectionManager:
             None: None result.
         """
         self.admin_connections: list[WebSocket] = []
-        self.user_connections: defaultdict[str,
-                                           list[WebSocket]] = defaultdict(list)
+        self.user_connections: defaultdict[UUID, list[WebSocket]] = defaultdict(list)
 
     # ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -52,7 +53,7 @@ class ConnectionManager:
         await websocket.accept()
         self.admin_connections.append(websocket)
 
-    async def connect_user(self, websocket: WebSocket, user_id: str) -> None:
+    async def connect_user(self, websocket: WebSocket, user_id: UUID) -> None:
         """Connect user.
         
         Args:
@@ -77,7 +78,7 @@ class ConnectionManager:
         if websocket in self.admin_connections:
             self.admin_connections.remove(websocket)
 
-    def disconnect_user(self, websocket: WebSocket, user_id: str) -> None:
+    def disconnect_user(self, websocket: WebSocket, user_id: UUID) -> None:
         """Disconnect user.
         
         Args:
@@ -118,7 +119,7 @@ class ConnectionManager:
         for ws in dead:
             self.disconnect_admin(ws)
 
-    async def send_to_user(self, user_id: str, payload: dict[str, Any]) -> None:
+    async def send_to_user(self, user_id: UUID, payload: dict[str, Any]) -> None:
         """Send to user.
         
         Args:
@@ -197,7 +198,7 @@ async def admin_telemetry(websocket: WebSocket) -> None:
     response_model=list[SystemLogResponse],
 )
 def search_logs(
-    user_id: str | None = Query(None, description="Filter by user ID"),
+    user_id: UUID | None = Query(None, description="Filter by user ID"),
     regex_pattern: str | None = Query(
         None, description="PostgreSQL regex applied to log message"
     ),
@@ -245,7 +246,7 @@ def accuracy_stats(
             "processed_vs_corrected = what the user was shown vs their edit"
         ),
     ),
-    user_id: str | None = Query(None, description="Filter by user ID"),
+    user_id: UUID | None = Query(None, description="Filter by user ID"),
     limit: int = Query(500, le=2000),
     _current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
@@ -282,7 +283,7 @@ def accuracy_history(
     accuracy_type: str | None = Query(
         None, pattern="^(raw_vs_processed|processed_vs_corrected)$"
     ),
-    user_id: str | None = Query(None),
+    user_id: UUID | None = Query(None),
     limit: int = Query(100, le=500),
     _current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),

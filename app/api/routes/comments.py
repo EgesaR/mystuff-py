@@ -8,6 +8,8 @@ routers with the SAME prefix as notes.py:
 
 import logging
 
+from uuid import UUID
+
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -28,7 +30,7 @@ router = APIRouter()
     summary="List comments on a note",
 )
 def list_comments(
-    note_id: str,
+    note_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> list[CommentResponse]:
@@ -49,7 +51,7 @@ def list_comments(
     summary="Post a comment on a note",
 )
 def create_comment(
-    note_id: str,
+    note_id: UUID,
     payload: CommentCreate,
     background_tasks: BackgroundTasks,
     current_user: User = Depends(require_active_user),
@@ -73,7 +75,7 @@ def create_comment(
     summary="Delete a comment (author or note owner only)",
 )
 def delete_comment(
-    comment_id: str,
+    comment_id: UUID,
     current_user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ) -> None:

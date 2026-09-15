@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,21 +20,21 @@ class NotificationCreate(BaseModel):
     )
     message: str
     type: NotificationType
-    recipient_id: str
-    sender_id: str | None = None
+    recipient_id: UUID
+    sender_id: UUID | None = None
     link: str | None = None
 
 
 class NotificationResponse(BaseModel):
     """Schema for notification response payloads."""
 
-    id: str
+    id: UUID
     title: str
     message: str
     type: NotificationType
     read: bool
-    recipient_id: str
-    sender_id: str | None
+    recipient_id: UUID
+    sender_id: UUID | None
     link: str | None
     created_at: datetime
     updated_at: datetime
@@ -44,7 +45,7 @@ class NotificationResponse(BaseModel):
 
 
 class BulkNotificationAction(BaseModel):
-    ids: list[str]
+    ids: list[UUID]
     action: Literal["read", "archive", "unarchive", "delete"]
 
 

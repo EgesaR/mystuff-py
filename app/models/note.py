@@ -1,6 +1,7 @@
 """Note database model definition module."""
 
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import JSON, Boolean, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -44,13 +45,11 @@ class Note(Base, UUIDMixin, TimestampMixin):
         default=False,
     )
 
-    owner_id: Mapped[str] = mapped_column(
+    owner_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
     )
 
-    # Added folder_id column to resolve repository type-checking errors
-    folder_id: Mapped[str | None] = mapped_column(
-        String(36),  # Adjust length matching your folder UUID/String strategy
+    folder_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("folders.id", ondelete="SET NULL"),
         nullable=True,
     )
