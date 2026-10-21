@@ -29,6 +29,7 @@ from app.api.routes.collections import router as collection_router
 from app.api.routes.comments import router as comments_router
 from app.api.routes.contact import router as contact_router
 from app.api.routes.docs import router as docs_router
+from app.api.routes.editor_sync import router as editor_sync_router
 from app.api.routes.feedback import router as feedback_router
 from app.api.routes.files import router as files_router
 from app.api.routes.health import router as health_router
@@ -45,6 +46,7 @@ from app.api.websocket.dictate import router as dictate_ws_router
 from app.api.websocket.feedback import router as feedback_ws_router
 from app.api.websocket.lyrics import router as lyrics_ws_router
 from app.api.websocket.notifications import router as notifications_ws_router
+from app.api.websocket.sync import router as editor_sync_ws_router
 from app.api.websocket.telemetry import router as telemetry_ws_router
 from app.core.config import settings
 from app.core.errors import UserAlreadyExistsError
@@ -121,6 +123,12 @@ app.include_router(
 )
 
 app.include_router(
+    editor_sync_router,
+    prefix="/api/notes",
+    tags=["Editor Sync"],
+)
+
+app.include_router(
     comments_router,
     prefix="/api/notes",
     tags=["Comments"],
@@ -185,6 +193,7 @@ app.include_router(dictate_ws_router)
 app.include_router(lyrics_ws_router)
 app.include_router(telemetry_ws_router)
 app.include_router(notifications_ws_router)
+app.include_router(editor_sync_ws_router)
 app.include_router(feedback_ws_router)
 
 

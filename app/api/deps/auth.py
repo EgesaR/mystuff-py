@@ -11,6 +11,7 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.security import decode_access_token
 from app.database.session import get_db
 from app.models.user import User
@@ -149,6 +150,57 @@ def get_current_user_ws(
         getattr(user, "is_developer", False),
     )
 
+    return user
+
+
+def get_current_user_ws_cookie(
+    websocket: WebSocket,
+    db: Session = Depends(get_db),
+) -> User:
+    """Authenticate a WebSocket using an allowed Origin and the auth cookie."""
+    origin = websocket.headers.get("origin")
+    if origin not in settings.ALLOWED_ORIGINS:
+        logger.warning(
+            "Sync WebSocket rejected: reason=origin_not_allowed origin=%s",
+            origin[:256] if origin else None,
+        )
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="Origin not allowed",
+        )
+
+    token = websocket.cookies.get("access_token")
+    if not token:
+        logger.warning(
+            "Sync WebSocket rejected: reason=missing_access_token origin=%s",
+            origin,
+        )
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="Not authenticated",
+        )
+
+    payload = decode_access_token(token)
+    if payload is None:
+        logger.warning(
+            "Sync WebSocket rejected: reason=invalid_access_token origin=%s",
+            origin,
+        )
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="Invalid or expired token",
+        )
+
+    user = db.query(User).filter(User.id == payload.sub).first()
+    if user is None or not user.is_active:
+        logger.warning(
+            "Sync WebSocket rejected: reason=user_unavailable origin=%s",
+            origin,
+        )
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="User is unavailable",
+        )
     return user
 
 

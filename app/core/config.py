@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Literal
 
-from pydantic import computed_field
+from pydantic import SecretStr, computed_field
 from pydantic_settings import (
     BaseSettings,
     SettingsConfigDict,
@@ -80,6 +80,8 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------
 
     SECRET_KEY: str
+
+    NOTE_ENCRYPTION_KEY: SecretStr | None = None
 
     ALGORITHM: Literal["HS256"] = "HS256"
 
@@ -168,6 +170,8 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: list[str] = [
         "http://localhost:5173",
         "https://localhost:5173",
+        "http://localhost:5174",
+        "https://localhost:5174",
         "https://mystuffs.vercel.app",
         "http://192.168.8.60:5173",
     ]

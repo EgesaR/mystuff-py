@@ -2,9 +2,8 @@
 
 import re
 from html import unescape
-from uuid import UUID
-
 from typing import Any, cast
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -113,6 +112,28 @@ class NoteService:
             list[Note]: List of Note.
         """
         return NoteRepository.get_user_notes(db, user_id, folder_id)
+
+    @staticmethod
+    def list_editor_notes(
+        db: Session,
+        user_id: UUID,
+        *,
+        folder_id: UUID | None = None,
+        query: str | None = None,
+        pinned_only: bool = False,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[Note]:
+        """List notes for the editor's paginated, recently-updated index."""
+        return NoteRepository.get_editor_notes(
+            db,
+            user_id,
+            folder_id=folder_id,
+            query_text=query,
+            pinned_only=pinned_only,
+            limit=limit,
+            offset=offset,
+        )
 
     @staticmethod
     def list_pinned(db: Session, user_id: UUID) -> list[Note]:

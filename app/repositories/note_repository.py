@@ -36,6 +36,33 @@ class NoteRepository(BaseRepository[Note]):
         return query.order_by(cls.model.created_at.desc()).all()
 
     @classmethod
+    def get_editor_notes(
+        cls,
+        db: Session,
+        user_id: UUID,
+        *,
+        folder_id: UUID | None = None,
+        query_text: str | None = None,
+        pinned_only: bool = False,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[Note]:
+        """Return a paginated note index ordered by most recently edited."""
+        query = db.query(cls.model).filter(cls.model.owner_id == user_id)
+        if folder_id is not None:
+            query = query.filter(cls.model.folder_id == folder_id)
+        if query_text:
+            query = query.filter(cls.model.title.ilike(f"%{query_text}%"))
+        if pinned_only:
+            query = query.filter(cls.model.pinned.is_(True))
+        return (
+            query.order_by(cls.model.updated_at.desc(), cls.model.id.asc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+
+    @classmethod
     def get_pinned_notes(cls, db: Session, user_id: UUID) -> list[Note]:
         """Retrieve pinned notes.
         

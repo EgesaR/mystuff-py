@@ -1,7 +1,6 @@
 """Note CRUD + search + pin/unpin + media endpoints."""
 
 import logging
-
 from uuid import UUID
 
 from fastapi import (
@@ -22,12 +21,66 @@ from app.models.media import NoteMedia
 from app.models.note import Note
 from app.models.user import User
 from app.schemas.media import NoteMediaResponse
-from app.schemas.note import NoteCreate, NoteResponse, NoteUpdate
+from app.schemas.note import (
+    EditorNoteSummary,
+    NoteCreate,
+    NoteResponse,
+    NoteUpdate,
+)
+from app.services.editor_sync_service import (
+    EncryptionUnavailableError,
+    SnapshotIntegrityError,
+    is_editor_snapshot,
+    read_snapshot,
+)
 from app.services.media_service import MediaService
 from app.services.note_service import NoteService
 
 logger = logging.getLogger("app")
 router = APIRouter()
+
+
+def _editor_note_summary(note: Note) -> EditorNoteSummary:
+    """Adapt the persisted note row to the editor's camel-case document model."""
+    try:
+        snapshot = read_snapshot(note)
+    except EncryptionUnavailableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Note snapshot encryption is not configured",
+        ) from exc
+    except SnapshotIntegrityError as exc:
+        logger.exception("Stored editor snapshot integrity check failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Stored editor snapshot is unavailable",
+        ) from exc
+
+    document = snapshot[1] if snapshot else None
+    return EditorNoteSummary(
+        id=str(note.id),
+        title=note.title,
+        createdAt=(
+            int(document["createdAt"])
+            if document and isinstance(document.get("createdAt"), (int, float))
+            else int(note.created_at.timestamp() * 1000)
+        ),
+        updatedAt=(
+            int(document["updatedAt"])
+            if document and isinstance(document.get("updatedAt"), (int, float))
+            else int(note.updated_at.timestamp() * 1000)
+        ),
+        revision=snapshot[0] if snapshot else 0,
+        document=document,
+        hasEditorDocument=snapshot is not None,
+        requiresMigration=(
+            note.content not in (None, {})
+            and not is_editor_snapshot(note.content)
+        ),
+        pinned=note.pinned,
+        folderId=note.folder_id,
+        color=note.color,
+    )
 
 
 @router.get(
@@ -80,6 +133,33 @@ def create_note(
 
 
 @router.get(
+    "/editor-documents",
+    response_model=list[EditorNoteSummary],
+    summary="List notes in the editor document format",
+)
+def list_editor_documents(
+    folder_id: UUID | None = Query(None),
+    q: str | None = Query(None, max_length=255),
+    pinned_only: bool = Query(False),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(require_active_user),
+    db: Session = Depends(get_db),
+) -> list[EditorNoteSummary]:
+    """List owned notes as browser-editor documents and migration metadata."""
+    notes = NoteService.list_editor_notes(
+        db,
+        user_id=current_user.id,
+        folder_id=folder_id,
+        query=q,
+        pinned_only=pinned_only,
+        limit=limit,
+        offset=offset,
+    )
+    return [_editor_note_summary(note) for note in notes]
+
+
+@router.get(
     "/{note_id}",
     response_model=NoteResponse,
     summary="Get a single note",
@@ -115,6 +195,17 @@ def update_note(
 ) -> Note:
     """Update an existing note."""
     try:
+        if {"content", "title"} & payload.model_fields_set:
+            existing = NoteService.get_note(
+                db,
+                note_id=note_id,
+                user_id=current_user.id,
+            )
+            if is_editor_snapshot(existing.content):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Use the editor-snapshot endpoint to update this note",
+                )
         return NoteService.update_note(
             db,
             note_id=note_id,

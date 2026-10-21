@@ -51,3 +51,21 @@ class NoteResponse(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
+
+
+class EditorNoteSummary(BaseModel):
+    """A note index entry shaped around the browser editor document."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    title: str
+    created_at: int = Field(alias="createdAt")
+    updated_at: int = Field(alias="updatedAt")
+    revision: int
+    document: dict[str, JsonValue] | None
+    has_editor_document: bool = Field(alias="hasEditorDocument")
+    requires_migration: bool = Field(alias="requiresMigration")
+    pinned: bool
+    folder_id: UUID | None = Field(alias="folderId")
+    color: str
