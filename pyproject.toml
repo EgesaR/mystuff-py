@@ -20,6 +20,7 @@ dependencies = [
     "cryptography==50.0.1",
     "bcrypt==5.0.0",
     "email-validator==2.3.0",
+    "ironveil-rs==0.1.0",
     # Uploads / Forms
     "python-multipart==0.0.29",
     "aiofiles==25.1.0",
@@ -39,8 +40,7 @@ dependencies = [
     "fastapi-mail>=1.6.8",
     "brevo-python>=5.0.2",
     "requests>=2.34.2",
-    "maturin>=1.15.0",
-    "ironveil",
+    
 ]
 
 [dependency-groups]
@@ -74,7 +74,8 @@ explicit = true
 [tool.uv.sources]
 torch = [{ index = "pytorch-cpu" }]
 torchaudio = [{ index = "pytorch-cpu" }]
-ironveil = { path = "../ironveil/bindings/ironveil-python", editable = true }
+
+ironveil-rs = { git = "https://github.com/EgesaR/Iron-Veil.git", rev = "088d7841f8d36904c7cb36fc752568dac3de5e1f", subdirectory = "bindings/ironveil-python" }
 
 # --- Tool Settings ---
 [tool.ruff]

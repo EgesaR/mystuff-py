@@ -1,58 +1,121 @@
-# syntax=docker/dockerfile:1
-ARG PYTHON_VERSION=3.13
 
-# ---------- Stage 1: install deps into a venv (never shipped as-is) ----------
+# syntax=docker/dockerfile:1
+
+ARG PYTHON_VERSION=3.13
+ARG RUST_TOOLCHAIN=stable
+
+# ============================================================
+# Stage 1: Build Python dependencies and native Rust extensions
+# ============================================================
+
 FROM python:${PYTHON_VERSION}-slim AS builder
+
+ARG RUST_TOOLCHAIN
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
-    UV_PROJECT_ENVIRONMENT=/app/.venv
+    UV_PROJECT_ENVIRONMENT=/app/.venv \
+    CARGO_HOME=/root/.cargo \
+    RUSTUP_HOME=/root/.rustup
+
+ENV PATH="/root/.cargo/bin:$PATH"
 
 WORKDIR /app
 
+# Git is needed for the pinned IronVeil Git dependency.
+# Build tools are needed for the PyO3/Maturin native extension.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        git \
+        curl \
+        ca-certificates \
+        build-essential \
+        pkg-config \
+        libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust only in the builder stage.
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+    | sh -s -- -y \
+        --profile minimal \
+        --default-toolchain "${RUST_TOOLCHAIN}" \
+    && rustc --version \
+    && cargo --version
+
+# Install uv.
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Manifests only — this layer is cache-hit unless deps actually change
+# Copy dependency manifests first to preserve Docker layer caching.
 COPY pyproject.toml uv.lock ./
 
+# Install application dependencies and compile IronVeil.
+# The Git source and exact commit are recorded in uv.lock.
+# --no-install-project avoids installing My Stuff before its source
+# is available. The app itself is copied into the runtime stage.
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --group ai
+    --mount=type=cache,target=/root/.cargo/registry \
+    --mount=type=cache,target=/root/.cargo/git \
+    uv sync \
+        --frozen \
+        --no-dev \
+        --group ai \
+        --no-install-project
 
-# ---------- Stage 2: slim runtime, nothing build-related survives ----------
+# Verify the native extension and AI runtime dependencies.
+RUN /app/.venv/bin/python -c \
+    "import ironveil; import ironveil._native; print('IronVeil build successful')"
+
+RUN /app/.venv/bin/python -c \
+    "import onnxruntime; print('ONNX Runtime:', onnxruntime.__version__)"
+
+
+# ============================================================
+# Stage 2: Minimal production runtime
+# ============================================================
+
 FROM python:${PYTHON_VERSION}-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONFAULTHANDLER=1 \
     PATH="/app/.venv/bin:$PATH" \
+    LD_LIBRARY_PATH="/app/.venv/lib/python3.13/site-packages/onnxruntime/capi" \
     PORT=8000
 
 WORKDIR /app
 
-# Only what the app needs at runtime — no compilers, no uv, no apt cache.
-# Dropped `curl`: nothing in this Dockerfile uses it (Render health-checks
-# your app over HTTP externally, it doesn't need curl inside the container).
+# Runtime dependencies only.
+# No Rust, Cargo, Git, compiler, uv or build tooling.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ffmpeg \
         libgomp1 \
+        libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
 
-# Note: /app itself is still owned by root at this point (WORKDIR created it
-# before appuser existed). Chowning it here — not just the things we COPY —
-# is what lets the app create its own runtime dirs (e.g. data/, data/uploads,
-# data/temp) after it drops to appuser below.
+# Create a non-root application user.
 RUN useradd --create-home --shell /usr/sbin/nologin appuser \
     && chown appuser:appuser /app
 
-# Pull in just the built venv from the builder stage — not uv, not pip cache,
-# not apt lists, not build tooling. This is what actually shrinks the image.
-COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
+# Copy the completed virtual environment.
+COPY --from=builder --chown=appuser:appuser \
+    /app/.venv /app/.venv
+
+# Copy application source and Alembic configuration.
 COPY --chown=appuser:appuser app ./app
+COPY --chown=appuser:appuser alembic.ini ./alembic.ini
 
 USER appuser
 
+# Verify the actual runtime environment.
+RUN python -c \
+    "import ironveil; import ironveil._native; print('IronVeil runtime successful')"
+
+RUN python -c \
+    "import onnxruntime; print('ONNX Runtime:', onnxruntime.__version__)"
+
 EXPOSE 8000
+
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
