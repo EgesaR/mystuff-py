@@ -1,0 +1,13 @@
+{
+  "include": ["app"],
+  "exclude": [
+    "app/database/migrations/**",
+    "**/__pycache__",
+    "**/.venv",
+    "**/node_modules"
+  ],
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "error",
+  "reportUnknownVariableType": "error",
+  "reportUnknownMemberType": "error"
+}
